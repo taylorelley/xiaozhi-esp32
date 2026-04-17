@@ -176,7 +176,7 @@ private:
 
 public:
     PowerManager(gpio_num_t pin) : charging_pin_(pin) {
-        // InitializePower-button detection pin
+        // Initialize power-button detection pin
         gpio_config_t powerdecgpio_conf = {};
         powerdecgpio_conf.intr_type = GPIO_INTR_DISABLE;
         powerdecgpio_conf.mode = GPIO_MODE_INPUT;
@@ -185,7 +185,7 @@ public:
         powerdecgpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;     
         gpio_config(&powerdecgpio_conf);
 
-        // InitializePower control pin
+        // Initialize power control pin
         gpio_config_t powercontgpio_conf = {};
         powercontgpio_conf.intr_type = GPIO_INTR_DISABLE;
         powercontgpio_conf.mode = GPIO_MODE_OUTPUT;

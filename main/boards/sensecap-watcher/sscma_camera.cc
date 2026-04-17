@@ -393,7 +393,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                     ESP_LOGI(TAG, "Start inference (enable=1)");
                     sscma_client_break(this_->sscma_client_handle_);
                     sscma_client_set_model(this_->sscma_client_handle_, 4);
-                    sscma_client_set_sensor(this_->sscma_client_handle_, 1, 1, true); // 设置分辨率 416X416
+                    sscma_client_set_sensor(this_->sscma_client_handle_, 1, 1, true); // Set resolution 416x416
                     sscma_client_invoke(this_->sscma_client_handle_, -1, false, true);
                     is_inference = true;
                 }
@@ -447,14 +447,14 @@ void SscmaCamera::InitializeMcpTools() {
     inference_en = settings.GetInt("enable", 0);
 
     auto& mcp_server = McpServer::GetInstance();
-        // 获取模型参数配置
+        // Get the vision model parameter configuration
     mcp_server.AddTool("self.model.param_get",
-        "获取当前视觉模型检测的参数配置信息。\n"
-        "返回结果包含：\n"
-        "  `threshold`: 检测置信度阈值 (0-100)，低于此值的检测结果将被忽略；\n"
-        "  `interval`: 触发对话后的冷却时间(秒)，防止频繁打断；\n"
-        "  `duration`: 持续检测确认时间(秒)；\n"
-        "  `target`: 当前关注的检测目标索引。",
+        "Get the current vision-model detection parameter configuration.\n"
+        "The result contains:\n"
+        "  `threshold`: detection confidence threshold (0-100); results below this value are ignored;\n"
+        "  `interval`: cooldown (seconds) after triggering a conversation, prevents frequent interruption;\n"
+        "  `duration`: required continuous detection time (seconds);\n"
+        "  `target`: index of the current target of interest.",
         PropertyList(),
         [this](const PropertyList& properties) -> ReturnValue {
             Settings settings("model", false);
@@ -471,14 +471,14 @@ void SscmaCamera::InitializeMcpTools() {
     });
 
     
-    // 设置模型参数配置
+    // Set the vision model parameter configuration
     mcp_server.AddTool("self.model.param_set",
-        "配置视觉模型检测参数。当用户希望调整检测灵敏度、频率或特定目标时使用。\n"
-        "参数(均为可选，未提供的参数将保持当前设置不变)：\n"
-        "  `threshold`: 置信度阈值 (0-100)。提高此值可减少误报，但可能漏检；\n"
-        "  `interval`: 冷却时间(秒)。设置对话结束后多久内不再触发检测；\n"
-        "  `duration`: 持续检测时间(秒)。\n"
-        "  `target`: 设置检测目标的索引 ID。",
+        "Configure vision-model detection parameters. Use when the user wants to adjust detection sensitivity, frequency, or target.\n"
+        "Parameters (all optional; unset parameters keep their current value):\n"
+        "  `threshold`: confidence threshold (0-100). Higher reduces false positives but may miss detections;\n"
+        "  `interval`: cooldown (seconds). Sets how long after a conversation ends before detection can trigger again;\n"
+        "  `duration`: continuous detection time (seconds).\n"
+        "  `target`: index ID of the target to detect.",
         PropertyList({
             Property("threshold", kPropertyTypeInteger, -1, -1, 100),
             Property("interval", kPropertyTypeInteger, -1, -1, 60),
@@ -537,12 +537,12 @@ void SscmaCamera::InitializeMcpTools() {
             return "{\"status\": \"success\", \"message\": \"Detection configuration updated\"}";
         });
 
-    // 推理开关获取
+    // Inference enable query/toggle
     mcp_server.AddTool("self.model.enable",
-        "控制视觉推理(摄像头检测)功能的开启与关闭，或查询当前状态。\n"
-        "当用户指令涉及'开启/关闭推理'、'开始/停止检测'时使用。\n"
-        "参数：\n"
-        "  `enable`: (可选) 整数。1=开启推理，0=关闭推理。若省略则返回当前开关状态。",
+        "Turn vision inference (camera detection) on or off, or query the current state.\n"
+        "Use this when the user says 'enable/disable inference' or 'start/stop detection'.\n"
+        "Parameters:\n"
+        "  `enable`: (optional) integer. 1=enable inference, 0=disable. If omitted, returns the current state.",
         PropertyList({
             Property("enable", kPropertyTypeInteger, inference_en, 0, 1)
         }),
@@ -557,7 +557,7 @@ void SscmaCamera::InitializeMcpTools() {
             } catch (const std::runtime_error&) {
                 // enable not provided -> treat as query
             }
-            // 返回当前配置
+            // Return current configuration
             int cur_en = settings.GetInt("enable", this->inference_en);
             return std::string("{\"enable\":") + std::to_string(cur_en) + "}";
         });
@@ -583,12 +583,12 @@ bool SscmaCamera::Capture() {
         return false;
     }
     ESP_LOGI(TAG, "Capturing image...");
-    // himax 可能有缓存数据, 只获取最新的照片即可.
+    // himax may hold cached data, just fetch the latest image.
     if (sscma_client_sample(sscma_client_handle_, 1) ) {
         ESP_LOGE(TAG, "Failed to capture image from SSCMA client");
         return false;
     }
-    vTaskDelay(pdMS_TO_TICKS(500)); // 等待SSCMA客户端处理数据
+    vTaskDelay(pdMS_TO_TICKS(500)); // Wait for the SSCMA client to process data
     if (xQueueReceive(sscma_data_queue_, &data, pdMS_TO_TICKS(1000)) != pdPASS) {
         ESP_LOGE(TAG, "Failed to receive JPEG data from SSCMA client");
         return false;
@@ -629,7 +629,7 @@ bool SscmaCamera::Capture() {
         return true;
     }
 
-    // 显示预览图片
+    // Show preview image
     auto display = dynamic_cast<LvglDisplay*>(Board::GetInstance().GetDisplay());
     if (display != nullptr) {
         uint16_t w = preview_image_.header.w;

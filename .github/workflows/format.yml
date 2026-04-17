@@ -1,0 +1,89 @@
+name: clang-format
+
+on:
+  pull_request:
+    paths:
+      - 'main/**/*.c'
+      - 'main/**/*.cc'
+      - 'main/**/*.cpp'
+      - 'main/**/*.h'
+      - 'main/**/*.hpp'
+      - '.clang-format'
+      - '.github/workflows/format.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'main/**/*.c'
+      - 'main/**/*.cc'
+      - 'main/**/*.cpp'
+      - 'main/**/*.h'
+      - 'main/**/*.hpp'
+      - '.clang-format'
+      - '.github/workflows/format.yml'
+  workflow_dispatch:
+
+jobs:
+  clang-format-check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install clang-format-18
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format-18
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-18 100
+          clang-format --version
+
+      - name: Determine changed files
+        id: changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+          fi
+          if ! git cat-file -e "$base" 2>/dev/null || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-list --max-parents=0 HEAD | tail -n1)"
+          fi
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMRT "$base" "$head" -- \
+              'main/*.c' 'main/*.cc' 'main/*.cpp' 'main/*.h' 'main/*.hpp' \
+              'main/**/*.c' 'main/**/*.cc' 'main/**/*.cpp' 'main/**/*.h' 'main/**/*.hpp' \
+            | grep -Ev '^main/(boards/[^/]+/third_party|managed_components|build)/' || true
+          )
+          printf '%s\n' "${files[@]}" > changed-files.txt
+          echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
+          echo "Changed C/C++ files: ${#files[@]}"
+          cat changed-files.txt
+
+      - name: Run clang-format --dry-run --Werror on changed files
+        if: steps.changed.outputs.count != '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            if [ ! -f "$f" ]; then
+              continue
+            fi
+            if ! clang-format --style=file --dry-run --Werror "$f"; then
+              status=1
+            fi
+          done < changed-files.txt
+          if [ "$status" -ne 0 ]; then
+            echo ""
+            echo "::error::One or more files do not match .clang-format. Run scripts/check-format.sh locally and apply suggested edits with: clang-format -i <file>"
+            exit 1
+          fi
+
+      - name: Skipped (no relevant files changed)
+        if: steps.changed.outputs.count == '0'
+        run: echo "No C/C++ source files in main/ were changed; skipping clang-format check."

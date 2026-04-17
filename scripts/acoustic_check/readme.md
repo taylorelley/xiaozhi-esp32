@@ -1,23 +1,23 @@
-# 声波测试
-该gui用于测试接受小智设备通过`udp`回传的`pcm`转时域/频域, 可以保存窗口长度的声音, 用于判断噪音频率分布和测试声波传输ascii的准确度,
+# Acoustic Test
+This GUI is used to test audio received via `udp` from a LittleWise device. It converts incoming `pcm` into time/frequency-domain views, and can save the windowed sound. It is useful for identifying noise frequency distribution and measuring the accuracy of ASCII data transmitted over sound.
 
-固件测试需要打开`USE_AUDIO_DEBUGGER`, 并设置好`AUDIO_DEBUG_UDP_SERVER`是本机地址.
-声波`demod`可以通过`sonic_wifi_config.html`或者上传至`PinMe`的[小智声波配网](https://iqf7jnhi.pinit.eth.limo)来输出声波测试
+To run the firmware test, enable `USE_AUDIO_DEBUGGER` and set `AUDIO_DEBUG_UDP_SERVER` to the local machine's address.
+Acoustic `demod` can be driven by `sonic_wifi_config.html` or by uploading to `PinMe` at the [LittleWise Sonic Wi-Fi Setup](https://iqf7jnhi.pinit.eth.limo) page.
 
-# 声波解码测试记录
+# Acoustic Decode Test Log
 
-> `✓`代表在I2S DIN接收原始PCM信号时就能成功解码, `△`代表需要降噪或额外操作可稳定解码, `X`代表降噪后效果也不好(可能能解部分但非常不稳定)。
-> 个别ADC需要I2C配置阶段做更精细的降噪调整, 由于设备不通用暂只按照boards内提供的config测试
+> `v` means decoding succeeds when raw PCM is received directly on I2S DIN. `~` means noise reduction or extra tweaking is required for stable decoding. `X` means the result is poor even after noise reduction (may decode partially but very unstably).
+> Some ADCs need finer noise-reduction tuning in the I2C configuration stage. Because such adjustments are device-specific, only the configs provided by the boards were tested.
 
-| 设备 | ADC | MIC | 效果 | 备注 |
+| Device | ADC | MIC | Result | Notes |
 | ---- | ---- | --- | --- | ---- |
-| bread-compact | INMP441 | 集成MEMEMIC | ✓ |
-| atk-dnesp32s3-box | ES8311 | | ✓ |
-| magiclick-2p5 | ES8311 | | ✓ |
-| lichuang-dev  | ES7210 | | △ | 测试时需要关掉INPUT_REFERENCE
-| kevin-box-2 | ES7210 | | △ | 测试时需要关掉INPUT_REFERENCE
-| m5stack-core-s3 | ES7210 | | △ | 测试时需要关掉INPUT_REFERENCE
-| xmini-c3 | ES8311 | | △ | 需降噪
-| atoms3r-echo-base | ES8311 | | △ | 需降噪
-| atk-dnesp32s3-box0 | ES8311 | | X | 能接收且解码, 但是丢包率很高
-| movecall-moji-esp32s3 | ES8311 | | X | 能接收且解码, 但是丢包率很高
+| bread-compact | INMP441 | Integrated MEMS MIC | v |
+| atk-dnesp32s3-box | ES8311 | | v |
+| magiclick-2p5 | ES8311 | | v |
+| lichuang-dev  | ES7210 | | ~ | INPUT_REFERENCE must be disabled during testing
+| kevin-box-2 | ES7210 | | ~ | INPUT_REFERENCE must be disabled during testing
+| m5stack-core-s3 | ES7210 | | ~ | INPUT_REFERENCE must be disabled during testing
+| xmini-c3 | ES8311 | | ~ | Requires noise reduction
+| atoms3r-echo-base | ES8311 | | ~ | Requires noise reduction
+| atk-dnesp32s3-box0 | ES8311 | | X | Can receive and decode, but packet loss is very high
+| movecall-moji-esp32s3 | ES8311 | | X | Can receive and decode, but packet loss is very high

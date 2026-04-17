@@ -36,14 +36,14 @@ class PowerManager {
             return;
         }
 
-        // 如果电池电量数据不足，则读取电池电量数据
+        // If battery data is insufficient, read battery ADC data
         if (adc_values_.size() < kBatteryAdcDataCount) {
             ReadBatteryAdcData();
             return;
         }
 
-        // 如果电池电量数据充足，则每 kBatteryAdcInterval 个 tick
-        // 读取一次电池电量数据
+        // If battery data is sufficient, every kBatteryAdcInterval ticks
+        // Read battery ADC data once
         ticks_++;
         if (ticks_ % kBatteryAdcInterval == 0) {
             ReadBatteryAdcData();
@@ -55,7 +55,7 @@ class PowerManager {
         ESP_ERROR_CHECK(
             adc_oneshot_read(adc_handle_, POWER_ADC_CHANNEL, &adc_value));
 
-        // 将 ADC 值添加到队列中
+        // Add the ADC value to the queue
         adc_values_.push_back(adc_value);
         if (adc_values_.size() > kBatteryAdcDataCount) {
             adc_values_.erase(adc_values_.begin());
@@ -66,22 +66,22 @@ class PowerManager {
         }
         average_adc /= adc_values_.size();
 
-        // 定义电池电量区间
+        // Define battery capacity ranges
         const struct {
             uint16_t adc;
             uint8_t level;
         } levels[] = {{1480, 0},  {1581, 20}, {1663, 40},
                       {1750, 60}, {1840, 80}, {1980, 100}};
 
-        // 低于最低值时
+        // Below the minimum value
         if (average_adc < levels[0].adc) {
             battery_level_ = 0;
         }
-        // 高于最高值时
+        // Above the maximum value
         else if (average_adc >= levels[5].adc) {
             battery_level_ = 100;
         } else {
-            // 线性插值计算中间值
+            // Linear interpolation for intermediate values
             for (int i = 0; i < 5; i++) {
                 if (average_adc >= levels[i].adc &&
                     average_adc < levels[i + 1].adc) {
@@ -113,7 +113,7 @@ class PowerManager {
 
    public:
     PowerManager(gpio_num_t pin) : charging_pin_(pin) {
-        // 初始化充电引脚
+        // Initialize charging pin
         gpio_config_t io_conf = {};
         io_conf.intr_type = GPIO_INTR_DISABLE;
         io_conf.mode = GPIO_MODE_INPUT;
@@ -122,7 +122,7 @@ class PowerManager {
         io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
         gpio_config(&io_conf);
 
-        // 创建电池电量检查定时器
+        // Create battery level check timer
         esp_timer_create_args_t timer_args = {
             .callback =
                 [](void* arg) {
@@ -137,7 +137,7 @@ class PowerManager {
         ESP_ERROR_CHECK(esp_timer_create(&timer_args, &timer_handle_));
         ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle_, 100000));
 
-        // 初始化 ADC
+        // Initialize ADC
         adc_oneshot_unit_init_cfg_t init_config = {
             .unit_id = ADC_UNIT_1,
             .ulp_mode = ADC_ULP_MODE_DISABLE,
@@ -163,7 +163,7 @@ class PowerManager {
     }
 
     bool IsCharging() {
-        // 如果电量已经满了，则不再显示充电中
+        // If the battery is full, stop showing charging
         if (battery_level_ == 100) {
             return false;
         }
@@ -171,7 +171,7 @@ class PowerManager {
     }
 
     bool IsDischarging() {
-        // 没有区分充电和放电，所以直接返回相反状态
+        // Charging and discharging are not distinguished, so just return the opposite state
         return !is_charging_;
     }
 

@@ -16,12 +16,12 @@
 #define BSP_POWER_AMP_IO         (IO_EXPANDER_PIN_NUM_0)
 #define AUDIO_CODEC_PA_PIN       GPIO_NUM_NC
 
-//如果开发板是V1.4 IO 定义为
+//If the board is V1.4, the IO is defined as
 #ifdef CONFIG_ESP_S3_LCD_EV_Board_1p4
     #define AUDIO_CODEC_I2C_SDA_PIN  GPIO_NUM_8
     #define AUDIO_CODEC_I2C_SCL_PIN  GPIO_NUM_18
 #endif
-//如果开发板是V1.5 IO 定义为
+//If the board is V1.5, the IO is defined as
 #ifdef CONFIG_ESP_S3_LCD_EV_Board_1p5
     #define AUDIO_CODEC_I2C_SDA_PIN  GPIO_NUM_47
     #define AUDIO_CODEC_I2C_SCL_PIN  GPIO_NUM_48

@@ -13,9 +13,9 @@ Tdisplays3promvsrloraAudioCodec::Tdisplays3promvsrloraAudioCodec(int input_sampl
     gpio_num_t mic_bclk, gpio_num_t mic_ws, gpio_num_t mic_data,
     gpio_num_t spkr_bclk, gpio_num_t spkr_lrclk, gpio_num_t spkr_data,
     bool input_reference) {
-    duplex_ = true;                             // 是否双工
-    input_reference_ = input_reference;         // 是否使用参考输入，实现回声消除
-    input_channels_ = input_reference_ ? 2 : 1; // 输入通道数
+    duplex_ = true;                             // Whether duplex mode is used
+    input_reference_ = input_reference;         // Whether to use reference input for echo cancellation
+    input_channels_ = input_reference_ ? 2 : 1; // Number of input channels
     input_sample_rate_ = input_sample_rate;
     output_sample_rate_ = output_sample_rate;
 

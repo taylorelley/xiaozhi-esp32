@@ -30,11 +30,11 @@ public:
                   bool mirror_x, bool mirror_y, bool swap_xy,custom_lcd_spi_t _lcd_spi_data);
     ~CustomLcdDisplay();
 
-    void EPD_Init();    /* 墨水屏初始化 */
-    void EPD_Clear();   /* 清空屏幕 */
-    void EPD_Display(); /* 刷buffer到墨水屏 */
+    void EPD_Init();    /* E-paper display initialization */
+    void EPD_Clear();   /* Clear screen */
+    void EPD_Display(); /* Flush buffer to the e-paper display */
     
-    /*快速刷新*/
+    /*Fast refresh*/
     void EPD_DisplayPartBaseImage();
     void EPD_Init_Partial();
     void EPD_DisplayPart();

@@ -144,7 +144,7 @@ private:
         ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_bus_cfg, &i2c_bus_));
 
          //add support ev board lcd amp
-        //初始化扩展io口
+        //Initialize IO expander
         esp_io_expander_new_i2c_tca9554(i2c_bus_, 0x20, &expander);
         /* Setup power amplifier pin, set default to enable */
         esp_io_expander_set_dir(expander, BSP_POWER_AMP_IO, IO_EXPANDER_OUTPUT);
@@ -263,7 +263,7 @@ public:
         return display_;
     }
     
-    //添加彩灯显示状态，如果亮度太暗可以去更改默认亮度值 DEFAULT_BRIGHTNESS 在led的sigle_led.cc中
+    //Add indicator LED status display; if the brightness is too dim, change DEFAULT_BRIGHTNESS in single_led.cc
     virtual Led* GetLed() override {
         static SingleLed led(BUILTIN_LED_GPIO);
         return &led;

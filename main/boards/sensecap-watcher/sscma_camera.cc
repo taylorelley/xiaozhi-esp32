@@ -43,7 +43,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
     spi_io_config.cs_gpio_num = BSP_SSCMA_CLIENT_SPI_CS;
     spi_io_config.pclk_hz = BSP_SSCMA_CLIENT_SPI_CLK;
     spi_io_config.spi_mode = 0;
-    spi_io_config.wait_delay = 10; //两个transfer之间至少延时4ms,但当前 FREERTOS_HZ=100, 延时精度只能达到10ms, 
+    spi_io_config.wait_delay = 10; // At least 4 ms between two transfers, but with FREERTOS_HZ=100 the delay granularity is only 10 ms
     spi_io_config.user_ctx = NULL;
     spi_io_config.io_expander = io_exp_handle;
     spi_io_config.flags.sync_use_expander = BSP_SSCMA_CLIENT_RST_USE_EXPANDER;
@@ -104,10 +104,10 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                 bool is_object_detected = false;
                 bool is_need_wake = false;
                 
-                // 定期更新检测配置参数，避免频繁NVS访问
+                // Refresh detection config periodically to avoid frequent NVS access
                 int64_t cur_tm = esp_timer_get_time();
 
-                // 尝试获取检测框数据（目标检测模型）
+                // Try to fetch bounding-box data (object detection model)
                 if (sscma_utils_fetch_boxes_from_reply(reply, &boxes, &box_count) == ESP_OK && box_count > 0) {
                     for (int i = 0; i < box_count; i++) {
                         ESP_LOGI(TAG, "[box %d]: x=%d, y=%d, w=%d, h=%d, score=%d, target=%d", i,  \
@@ -121,7 +121,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                     }
                     free(boxes);
                 } else if (sscma_utils_fetch_classes_from_reply(reply, &classes, &class_count) == ESP_OK && class_count > 0) {
-                    // 尝试获取分类数据（分类模型）
+                    // Try to fetch classification data (classification model)
                     for (int i = 0; i < class_count; i++) {
                         ESP_LOGI(TAG, "[class %d]: target=%d, score=%d", i,
                                 classes[i].target, classes[i].score);
@@ -133,7 +133,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                     }
                     free(classes);
                 } else if (sscma_utils_fetch_points_from_reply(reply, &points, &point_count) == ESP_OK && point_count > 0) {
-                     // 尝试获取关键点数据（姿态估计模型）
+                     // Try to fetch keypoint data (pose estimation model)
                     for (int i = 0; i < point_count; i++) {
                         ESP_LOGI(TAG, "[point %d]: x=%d, y=%d, z=%d, score=%d, target=%d", i, 
                                 points[i].x, points[i].y, points[i].z, points[i].score, points[i].target);
@@ -146,54 +146,54 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                     free(points);
                 }
 
-                // 如果需要开始冷却期，现在开始计时
-                if (self->need_start_cooldown) { // 回调暂停，标志保持，等待回调恢复后开始计时
+                // If a cooldown needs to start, begin timing now
+                if (self->need_start_cooldown) { // Callbacks were paused; the flag is retained and timing begins once callbacks resume
                     self->state_start_time = cur_tm;
                     self->need_start_cooldown = false;
                     ESP_LOGI(TAG, "Starting cooldown timer");
                 }
                 
-                // 状态机驱动的检测逻辑 - 只在人员出现时触发
+                // State-machine driven detection logic - triggered only when a person appears
                 switch (self->detection_state) {
                     case SscmaCamera::IDLE:
                         if (is_object_detected) {
-                            // 人员出现，开始验证（这是从无到有的转换）
+                            // Person appeared, begin validation (transition from absent to present)
                             self->detection_state = SscmaCamera::VALIDATING;
-                            self->state_start_time = cur_tm; // 记录物体出现时间
-                            self->last_detected_time = cur_tm; // 初始化最后检测时间
+                            self->state_start_time = cur_tm; // Record the time the object appeared
+                            self->last_detected_time = cur_tm; // Initialize last detection time
                             ESP_LOGI(TAG, "object appeared, starting validation");
                         }
                         break;
-                        
+
                     case SscmaCamera::VALIDATING:
                         if (is_object_detected) {
-                            // 更新最后检测到的时间
+                            // Update the last time the object was detected
                             self->last_detected_time = cur_tm;
-                            // 检查是否验证足够时间
+                            // Check whether validation has been active long enough
                             if ((cur_tm - self->state_start_time) >= (self->detect_duration_sec * 1000000)) {
                                 is_need_wake = true;
                             }
                         } else {
-                            // 验证期间人员离开，检查去抖动时间
-                            if (self->last_detected_time > 0 && 
+                            // Person left during validation, check debounce window
+                            if (self->last_detected_time > 0 &&
                                 (cur_tm - self->last_detected_time) >= self->detect_debounce_sec * 1000000LL) {
-                                // 去抖动时间已过，确认人员已离开，回到空闲
+                                // Debounce window elapsed, confirm person has left, return to idle
                                 self->detection_state = SscmaCamera::IDLE;
                                 self->last_detected_time = 0;
                                 ESP_LOGI(TAG, "object left during validation (debounced), back to idle");
                             }
                         }
                         break;
-                        
+
                     case SscmaCamera::COOLDOWN:
-                        // 冷却期，需要满足两个条件：1)object离开 2)过了15秒
-                        if (!is_object_detected && 
+                        // Cooldown requires two conditions: 1) object left, 2) elapsed time exceeded 15 s
+                        if (!is_object_detected &&
                             (cur_tm - self->state_start_time) >= (self->detect_invoke_interval_sec * 1000000LL)) {
-                            // object离开且冷却时间到，回到空闲状态
+                            // Object left and cooldown elapsed, return to idle
                             self->detection_state = SscmaCamera::IDLE;
                             ESP_LOGI(TAG, "Cooldown complete and object left, back to idle - ready for next appearance");
                         }
-                        // 其他情况继续保持冷却状态
+                        // Otherwise stay in cooldown
                         break;
                 }
 
@@ -202,7 +202,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                     ESP_LOGI(TAG, "Validation complete, triggering conversation (type=%d, res=%dx%d)", 
                              self->detect_target, width, height);
                     
-                    // 触发对话
+                    // Trigger conversation
                     std::string wake_word;
                     if ( model_type  == 0 ) {
                         std::string cached_target_name = "object";
@@ -226,7 +226,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                     printf("wake_word:%s\n", wake_word.c_str());
                     Application::GetInstance().WakeWordInvoke(wake_word);
                     
-                    // 进入冷却状态，标记需要开始冷却期；如下变量将在会话结束后被使用，等待回调恢复后开始计时
+                    // Enter cooldown state, mark that cooldown should start; the variables below are used after the session ends and timing starts once callbacks resume
                     self->detection_state = SscmaCamera::COOLDOWN;
                     self->need_start_cooldown = true;
                 }
@@ -237,12 +237,12 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                 if (sscma_utils_fetch_image_from_reply(reply, &img, &img_size) == ESP_OK)
                 {
                     ESP_LOGI(TAG, "image_size: %d\n", img_size);
-                    // 将数据通过队列发送出去
+                    // Send the data through the queue
                     SscmaData data;
                     data.img = (uint8_t*)img;
                     data.len = img_size;
 
-                    // 清空队列，保证只保存最新的数据
+                    // Drain the queue so only the latest data is kept
                     SscmaData dummy;
                     while (xQueueReceive(self->sscma_data_queue_, &dummy, 0) == pdPASS) {
                         if (dummy.img) {
@@ -250,7 +250,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
                         }
                     }
                     xQueueSend(self->sscma_data_queue_, &data, 0);
-                    // 注意：img 的释放由接收方负责
+                    // Note: the receiver is responsible for freeing img
                 }
                 break;
             default:
@@ -275,7 +275,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
     sscma_client_init(sscma_client_handle_);
 
     ESP_LOGI(TAG, "SSCMA client initialized");
-    // 设置分辨率
+    // Set resolution
     // 3 = 640x480
     if (sscma_client_set_sensor(sscma_client_handle_, 1, 3, true)) {
         ESP_LOGE(TAG, "Failed to set sensor");
@@ -284,14 +284,14 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
         return;
     }
 
-    // 获取设备信息
+    // Get device info
     sscma_client_info_t *info;
     if (sscma_client_get_info(sscma_client_handle_, &info, true) == ESP_OK) {
         ESP_LOGI(TAG, "Device Info - ID: %s, Name: %s", 
             info->id ? info->id : "NULL", 
             info->name ? info->name : "NULL");
     }
-    // 初始化JPEG数据的内存
+    // Initialize memory for JPEG data
     jpeg_data_.len = 0;
     jpeg_data_.buf = (uint8_t*)heap_caps_malloc(IMG_JPEG_BUF_SIZE, MALLOC_CAP_SPIRAM);;
     if ( jpeg_data_.buf == nullptr ) {
@@ -299,7 +299,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
         return;
     }
 
-    //初始化JPEG解码
+    // Initialize JPEG decoding
     jpeg_error_t err;
     jpeg_dec_config_t config = { .output_type = JPEG_PIXEL_FORMAT_RGB565_LE, .rotate = JPEG_ROTATE_0D };
     err = jpeg_dec_open(&config, &jpeg_dec_);
@@ -324,7 +324,7 @@ SscmaCamera::SscmaCamera(esp_io_expander_handle_t io_exp_handle) {
     }
     memset(jpeg_out_, 0, sizeof(jpeg_dec_header_info_t));
 
-    // 初始化预览图片的内存
+    // Initialize memory for the preview image
     memset(&preview_image_, 0, sizeof(preview_image_));
     preview_image_.header.magic = LV_IMAGE_HEADER_MAGIC;
     preview_image_.header.cf = LV_COLOR_FORMAT_RGB565;

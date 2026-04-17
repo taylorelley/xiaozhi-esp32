@@ -12,7 +12,7 @@ static const char* TAG = "OttoMovements";
 Otto::Otto() {
     is_otto_resting_ = false;
     has_hands_ = false;
-    // 初始化所有舵机管脚为-1（未连接）
+    // Initialize all servo pins to -1 (not connected)
     for (int i = 0; i < SERVO_COUNT; i++) {
         servo_pins_[i] = -1;
         servo_trim_[i] = 0;
@@ -36,7 +36,7 @@ void Otto::Init(int left_leg, int right_leg, int left_foot, int right_foot, int 
     servo_pins_[LEFT_HAND] = left_hand;
     servo_pins_[RIGHT_HAND] = right_hand;
 
-    // 检查是否有手部舵机
+    // Check whether hand servos are present
     has_hands_ = (left_hand != -1 && right_hand != -1);
 
     AttachServos();
@@ -200,13 +200,13 @@ void Otto::Execute(int amplitude[SERVO_COUNT], int offset[SERVO_COUNT], int peri
 }
 
 //---------------------------------------------------------
-//-- Execute2: 使用绝对角度作为振荡中心
+//-- Execute2: use absolute angle as the oscillation center
 //--  Parameters:
-//--    amplitude: 振幅数组（每个舵机的振荡幅度）
-//--    center_angle: 绝对角度数组（0-180度），作为振荡中心位置
-//--    period: 周期（毫秒）
-//--    phase_diff: 相位差数组（弧度）
-//--    steps: 步数/周期数（可为小数）
+//--    amplitude: amplitude array (oscillation amplitude for each servo)
+//--    center_angle: absolute angle array (0-180 degrees) used as oscillation center
+//--    period: period (milliseconds)
+//--    phase_diff: phase difference array (radians)
+//--    steps: step/cycle count (may be fractional)
 //---------------------------------------------------------
 void Otto::Execute2(int amplitude[SERVO_COUNT], int center_angle[SERVO_COUNT], int period,
                     double phase_diff[SERVO_COUNT], float steps = 1.0) {
@@ -214,7 +214,7 @@ void Otto::Execute2(int amplitude[SERVO_COUNT], int center_angle[SERVO_COUNT], i
         SetRestState(false);
     }
 
-    // 将绝对角度转换为offset（offset = center_angle - 90）
+    // Convert absolute angle to offset (offset = center_angle - 90)
     int offset[SERVO_COUNT];
     for (int i = 0; i < SERVO_COUNT; i++) {
         offset[i] = center_angle[i] - 90;
@@ -237,23 +237,23 @@ void Otto::Execute2(int amplitude[SERVO_COUNT], int center_angle[SERVO_COUNT], i
 ///////////////////////////////////////////////////////////////////
 void Otto::Home(bool hands_down) {
     if (is_otto_resting_ == false) {  // Go to rest position only if necessary
-        // 为所有舵机准备初始位置值
+        // Prepare initial positions for all servos
         int homes[SERVO_COUNT];
         for (int i = 0; i < SERVO_COUNT; i++) {
             if (i == LEFT_HAND || i == RIGHT_HAND) {
                 if (hands_down) {
-                    // 如果需要复位手部，设置为默认值
+                    // If hands should be reset, use default value
                     if (i == LEFT_HAND) {
                         homes[i] = HAND_HOME_POSITION;
                     } else {                                  // RIGHT_HAND
-                        homes[i] = 180 - HAND_HOME_POSITION;  // 右手镜像位置
+                        homes[i] = 180 - HAND_HOME_POSITION;  // Right-hand mirrored position
                     }
                 } else {
-                    // 如果不需要复位手部，保持当前位置
+                    // If hands should not be reset, keep current position
                     homes[i] = servo_[i].GetPosition();
                 }
             } else {
-                // 腿部和脚部舵机始终复位
+                // Leg and foot servos are always reset
                 homes[i] = 90;
             }
         }
@@ -294,7 +294,7 @@ void Otto::Jump(float steps, int period) {
 //--    * steps:  Number of steps
 //--    * T : Period
 //--    * Dir: Direction: FORWARD / BACKWARD
-//--    * amount: 手部摆动幅度, 0表示不摆动
+//--    * amount: hand swing amplitude, 0 means no swing
 //---------------------------------------------------------
 void Otto::Walk(float steps, int period, int dir, int amount) {
     //-- Oscillator parameters for walking
@@ -308,15 +308,15 @@ void Otto::Walk(float steps, int period, int dir, int amount) {
     int O[SERVO_COUNT] = {0, 0, 5, -5, HAND_HOME_POSITION - 90, HAND_HOME_POSITION};
     double phase_diff[SERVO_COUNT] = {0, 0, DEG2RAD(dir * -90), DEG2RAD(dir * -90), 0, 0};
 
-    // 如果amount>0且有手部舵机，设置手部振幅和相位
+    // If amount > 0 and hand servos are present, set hand amplitude and phase
     if (amount > 0 && has_hands_) {
-        // 手臂振幅使用传入的amount参数
+        // Arm amplitude uses the passed-in amount argument
         A[LEFT_HAND] = amount;
         A[RIGHT_HAND] = amount;
 
-        // 左手与右腿同相，右手与左腿同相，使得机器人走路时手臂自然摆动
-        phase_diff[LEFT_HAND] = phase_diff[RIGHT_LEG];  // 左手与右腿同相
-        phase_diff[RIGHT_HAND] = phase_diff[LEFT_LEG];  // 右手与左腿同相
+        // Left hand in phase with right leg, right hand in phase with left leg, so arms swing naturally while walking
+        phase_diff[LEFT_HAND] = phase_diff[RIGHT_LEG];  // Left hand in phase with right leg
+        phase_diff[RIGHT_HAND] = phase_diff[LEFT_LEG];  // Right hand in phase with left leg
     } else {
         A[LEFT_HAND] = 0;
         A[RIGHT_HAND] = 0;
@@ -332,7 +332,7 @@ void Otto::Walk(float steps, int period, int dir, int amount) {
 //--   * Steps: Number of steps
 //--   * T: Period
 //--   * Dir: Direction: LEFT / RIGHT
-//--   * amount: 手部摆动幅度, 0表示不摆动
+//--   * amount: hand swing amplitude, 0 means no swing
 //---------------------------------------------------------
 void Otto::Turn(float steps, int period, int dir, int amount) {
     //-- Same coordination than for walking (see Otto::walk)
@@ -352,15 +352,15 @@ void Otto::Turn(float steps, int period, int dir, int amount) {
         A[1] = 30;
     }
 
-    // 如果amount>0且有手部舵机，设置手部振幅和相位
+    // If amount > 0 and hand servos are present, set hand amplitude and phase
     if (amount > 0 && has_hands_) {
-        // 手臂振幅使用传入的amount参数
+        // Arm amplitude uses the passed-in amount argument
         A[LEFT_HAND] = amount;
         A[RIGHT_HAND] = amount;
 
-        // 转向时手臂摆动相位：左手与左腿同相，右手与右腿同相，增强转向效果
-        phase_diff[LEFT_HAND] = phase_diff[LEFT_LEG];    // 左手与左腿同相
-        phase_diff[RIGHT_HAND] = phase_diff[RIGHT_LEG];  // 右手与右腿同相
+        // Arm swing phase while turning: left hand in phase with left leg, right hand in phase with right leg, to emphasize the turn
+        phase_diff[LEFT_HAND] = phase_diff[LEFT_LEG];    // Left hand in phase with left leg
+        phase_diff[RIGHT_HAND] = phase_diff[RIGHT_LEG];  // Right hand in phase with right leg
     } else {
         A[LEFT_HAND] = 0;
         A[RIGHT_HAND] = 0;
@@ -455,7 +455,7 @@ void Otto::ShakeLeg(int steps, int period, int dir) {
 }
 
 //---------------------------------------------------------
-//-- Otto movement: Sit (坐下)
+//-- Otto movement: Sit
 //---------------------------------------------------------
 void Otto::Sit() {
     int target[SERVO_COUNT] = {120, 60, 0, 180, 45, 135};
@@ -631,10 +631,10 @@ void Otto::Flapping(float steps, int period, int height, int dir) {
 }
 
 //---------------------------------------------------------
-//-- Otto gait: WhirlwindLeg (旋风腿)
+//-- Otto gait: WhirlwindLeg
 //--   Parameters:
 //--     steps: Number of steps
-//--     period: Period (建议100-800毫秒)
+//--     period: Period (recommended 100-800 ms)
 //--     amplitude: amplitude (Values between 20 - 40)
 //---------------------------------------------------------
 void Otto::WhirlwindLeg(float steps, int period, int amplitude) {
@@ -654,10 +654,10 @@ void Otto::WhirlwindLeg(float steps, int period, int amplitude) {
 }
 
 //---------------------------------------------------------
-//-- 手部动作: 举手
+//-- Hand action: hands up
 //--  Parameters:
-//--    period: 动作时间
-//--    dir: 方向 1=左手, -1=右手, 0=双手
+//--    period: action duration
+//--    dir: direction 1=left hand, -1=right hand, 0=both hands
 //---------------------------------------------------------
 void Otto::HandsUp(int period, int dir) {
     if (!has_hands_) {
@@ -681,10 +681,10 @@ void Otto::HandsUp(int period, int dir) {
 }
 
 //---------------------------------------------------------
-//-- 手部动作: 双手放下
+//-- Hand action: hands down
 //--  Parameters:
-//--    period: 动作时间
-//--    dir: 方向 1=左手, -1=右手, 0=双手
+//--    period: action duration
+//--    dir: direction 1=left hand, -1=right hand, 0=both hands
 //---------------------------------------------------------
 void Otto::HandsDown(int period, int dir) {
     if (!has_hands_) {
@@ -703,9 +703,9 @@ void Otto::HandsDown(int period, int dir) {
 }
 
 //---------------------------------------------------------
-//--  手部动作: 挥手
+//--  Hand action: wave
 //--  Parameters:
-//--  dir: 方向 LEFT/RIGHT/BOTH
+//--  dir: direction LEFT/RIGHT/BOTH
 //---------------------------------------------------------
 void Otto::HandWave(int dir) {
     if (!has_hands_) {
@@ -733,11 +733,11 @@ void Otto::HandWave(int dir) {
 
 
 //---------------------------------------------------------
-//-- 手部动作: 大风车
+//-- Hand action: windmill
 //--  Parameters:
-//--    steps: 动作次数
-//--    period: 动作周期（毫秒）
-//--    amplitude: 振荡幅度（度）
+//--    steps: number of repetitions
+//--    period: action period (milliseconds)
+//--    amplitude: oscillation amplitude (degrees)
 //---------------------------------------------------------
 void Otto::Windmill(float steps, int period, int amplitude) {
     if (!has_hands_) {
@@ -751,11 +751,11 @@ void Otto::Windmill(float steps, int period, int amplitude) {
 }
 
 //---------------------------------------------------------
-//-- 手部动作: 起飞
+//-- Hand action: takeoff
 //--  Parameters:
-//--    steps: 动作次数
-//--    period: 动作周期（毫秒），数值越小速度越快
-//--    amplitude: 振荡幅度（度）
+//--    steps: number of repetitions
+//--    period: action period (milliseconds); smaller value means faster
+//--    amplitude: oscillation amplitude (degrees)
 //---------------------------------------------------------
 void Otto::Takeoff(float steps, int period, int amplitude) {
     if (!has_hands_) {
@@ -771,11 +771,11 @@ void Otto::Takeoff(float steps, int period, int amplitude) {
 }
 
 //---------------------------------------------------------
-//-- 手部动作: 健身
+//-- Hand action: fitness
 //--  Parameters:
-//--    steps: 动作次数
-//--    period: 动作周期（毫秒）
-//--    amplitude: 振荡幅度（度）
+//--    steps: number of repetitions
+//--    period: action period (milliseconds)
+//--    amplitude: oscillation amplitude (degrees)
 //---------------------------------------------------------
 void Otto::Fitness(float steps, int period, int amplitude) {
     if (!has_hands_) {
@@ -795,10 +795,10 @@ void Otto::Fitness(float steps, int period, int amplitude) {
 }
 
 //---------------------------------------------------------
-//-- 手部动作: 打招呼
+//-- Hand action: greeting
 //--  Parameters:
-//--    dir: 方向 LEFT=左手, RIGHT=右手
-//--    steps: 动作次数
+//--    dir: direction LEFT=left hand, RIGHT=right hand
+//--    steps: number of repetitions
 //---------------------------------------------------------
 void Otto::Greeting(int dir, float steps) {
     if (!has_hands_) {
@@ -824,10 +824,10 @@ void Otto::Greeting(int dir, float steps) {
 }
 
 //---------------------------------------------------------
-//-- 手部动作: 害羞
+//-- Hand action: shy
 //--  Parameters:
-//--    dir: 方向 LEFT=左手, RIGHT=右手
-//--    steps: 动作次数
+//--    dir: direction LEFT=left hand, RIGHT=right hand
+//--    steps: number of repetitions
 //---------------------------------------------------------
 void Otto::Shy(int dir, float steps) {
     if (!has_hands_) {
@@ -853,7 +853,7 @@ void Otto::Shy(int dir, float steps) {
 }
 
 //---------------------------------------------------------
-//-- 手部动作: 广播体操
+//-- Hand action: radio calisthenics
 //---------------------------------------------------------
 void Otto::RadioCalisthenics() {
     if (!has_hands_) {
@@ -885,7 +885,7 @@ void Otto::RadioCalisthenics() {
 }
 
 //---------------------------------------------------------
-//-- 手部动作: 爱的魔力转圈圈
+//-- Hand action: magic love circles
 //---------------------------------------------------------
 void Otto::MagicCircle() {
     if (!has_hands_) {
@@ -900,50 +900,50 @@ void Otto::MagicCircle() {
 }
 
 //---------------------------------------------------------
-//-- 展示动作：串联多个动作展示
+//-- Showcase: chain multiple actions
 //---------------------------------------------------------
 void Otto::Showcase() {
     if (GetRestState() == true) {
         SetRestState(false);
     }
 
-    // 1. 往前走3步
+    // 1. Walk forward 3 steps
     Walk(3, 1000, FORWARD, 50);
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    // 2. 挥挥手
+    // 2. Wave hand
     if (has_hands_) {
         HandWave(LEFT);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 
-    // 3. 跳舞（使用广播体操）
+    // 3. Dance (use radio calisthenics)
     if (has_hands_) {
         RadioCalisthenics();
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 
-    // 4. 太空步
+    // 4. Moonwalk
     Moonwalker(3, 900, 25, LEFT);
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    // 5. 摇摆
+    // 5. Swing
     Swing(3, 1000, 30);
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    // 6. 起飞
+    // 6. Takeoff
     if (has_hands_) {
         Takeoff(5, 300, 40);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 
-    // 7. 健身
+    // 7. Fitness
     if (has_hands_) {
         Fitness(5, 1000, 25);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 
-    // 8. 往后走3步
+    // 8. Walk backward 3 steps
     Walk(3, 1000, BACKWARD, 50);
 }
 

@@ -144,9 +144,9 @@ void WebSocketControlServer::HandleMessage(httpd_req_t *req, const char* data, s
         return;
     }
 
-    // 支持两种格式：
-    // 1. 完整格式：{"type":"mcp","payload":{...}}
-    // 2. 简化格式：直接是MCP payload对象
+    // Two formats are supported:
+    // 1. Full format: {"type":"mcp","payload":{...}}
+    // 2. Simplified format: directly an MCP payload object
     
     cJSON* payload = nullptr;
     cJSON* type = cJSON_GetObjectItem(root, "type");

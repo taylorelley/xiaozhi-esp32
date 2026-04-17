@@ -1,36 +1,7 @@
+# minsi-k08-dual board
 
-minsi-k08-wifi和minsi-k08-ml307是敏思科技推出的基于ESP32S3N16R8，搭载MAX98357音频功率放大器和INMP441全向麦克风模块，通过改造K08透明机甲小钢炮音箱而成的带有朋克风格的大喇叭大电池小智AI聊天机器人方案。
+([English](README.md) | [中文](README_zh.md))
 
-<a href="https://item.taobao.com/item.htm?id=889892765588" target="_blank" title="SenseCAP Watcher">Minsi-k08</a>
+This folder contains the board-support code for the **minsi-k08-dual** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-  <a href="minsi-k08.jpg" target="_blank" title="Minsi-k08">
-    <img src="minsi-k08.jpg" width="240" />
-  </a>
-
-
-
-# 编译配置命令
-
-**配置编译目标为 ESP32S3：**
-
-```bash
-idf.py set-target esp32s3
-```
-
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type ->敏思科技K08(DUAL)
-```
-
-**编译烧入：**
-
-```bash
-idf.py build flash
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

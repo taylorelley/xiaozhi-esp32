@@ -1,13 +1,7 @@
-## EDA-TV-Pro 小电视
+# eda-tv-pro board
 
-### 项目文档
-- [EDA-TV-Pro 项目文档](https://wiki.lceda.cn/zh-hans/course-projects/smart-internet/tv-pro/tv-pro-introduce.html)
+([English](README.md) | [中文](README_zh.md))
 
-### 编译配置
-该项目采用的开发板Flash容量为8MB，编译时须配置：
+This folder contains the board-support code for the **eda-tv-pro** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-```
-Partition Table  --->
-  Partition Table (Custom partition table CSV)  --->
-  (partitions/v2/8m.csv) Custom partition CSV file
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

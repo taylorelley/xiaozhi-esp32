@@ -1,42 +1,7 @@
-# 四博智联AI陪伴盒子
+# doit-s3-aibox board
 
-# 特性
-* 使用PDM麦克风
-* 使用共阳极LED
+([English](README.md) | [中文](README_zh.md))
 
-## 按键配置
-* BUTTON3：短按-打断/唤醒
-* BUTTON1：音量+
-* BUTTON2：音量-
+This folder contains the board-support code for the **doit-s3-aibox** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-## 编译配置命令
-
-**配置编译目标为 ESP32S3：**
-
-```bash
-idf.py set-target esp32s3
-```
-
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type -> 四博智联AI陪伴盒子
-```
-
-**修改 psram 配置：**
-
-```
-Component config -> ESP PSRAM -> SPI RAM config -> Mode (QUAD/OCT) -> Octal Mode PSRAM
-```
-
-**编译：**
-
-```bash
-idf.py build
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

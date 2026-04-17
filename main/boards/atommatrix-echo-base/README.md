@@ -1,25 +1,7 @@
-# 编译配置命令
+# atommatrix-echo-base board
 
-**配置编译目标为 ESP32：**
+([English](README.md) | [中文](README_zh.md))
 
-```bash
-idf.py set-target esp32
-```
+This folder contains the board-support code for the **atommatrix-echo-base** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type -> AtomMatrix + Echo Base
-```
-
-**编译：**
-
-```bash
-idf.py build
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

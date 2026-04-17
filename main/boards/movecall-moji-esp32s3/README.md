@@ -1,26 +1,7 @@
-# 编译配置命令
+# movecall-moji-esp32s3 board
 
-**配置编译目标为 ESP32S3：**
+([English](README.md) | [中文](README_zh.md))
 
-```bash
-idf.py set-target esp32s3
-```
+This folder contains the board-support code for the **movecall-moji-esp32s3** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type -> Movecall Moji 小智AI衍生版
-```
-
-
-**编译：**
-
-```bash
-idf.py build
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

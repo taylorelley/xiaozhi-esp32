@@ -1,3 +1,7 @@
-新增 微雪 开发板: ESP32-S3-AUDIO-Board
-产品链接：
-https://www.waveshare.net/shop/ESP32-S3-AUDIO-Board.htm
+# esp32-s3-audio-board board
+
+([English](README.md) | [中文](README_zh.md))
+
+This folder contains the board-support code for the **esp32-s3-audio-board** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
+
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

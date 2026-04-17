@@ -1,28 +1,7 @@
-# 编译配置命令
+# lilygo-t-circle-s3 board
 
-**配置编译目标为 ESP32S3：**
+([English](README.md) | [中文](README_zh.md))
 
-```bash
-idf.py set-target esp32s3
-```
+This folder contains the board-support code for the **lilygo-t-circle-s3** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type -> LILYGO T-Circle-S3
-```
-
-
-**编译：**
-
-```bash
-idf.py build
-```
-
-<a href="https://github.com/Xinyuan-LilyGO/T-Circle-S3" target="_blank" title="LILYGO T-Circle-S3">LILYGO T-Circle-S3</a>
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

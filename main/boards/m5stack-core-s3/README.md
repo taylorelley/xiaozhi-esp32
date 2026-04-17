@@ -1,22 +1,7 @@
-# 使用说明 
+# m5stack-core-s3 board
 
+([English](README.md) | [中文](README_zh.md))
 
-**编译**
+This folder contains the board-support code for the **m5stack-core-s3** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-```bash
-python ./scripts/release.py m5stack-core-s3
-```
-
-如需手动编译，请参考 `m5stack-core-s3/config.json` 修改 menuconfig 对应选项。
-
-**烧录**
-
-```bash
-idf.py flash
-```
-
-> [!NOTE]
-> 进入下载模式：长按复位按键(约3秒)，直至内部指示灯亮绿色，松开按键。
-
-
- 
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

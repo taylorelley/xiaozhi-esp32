@@ -75,7 +75,7 @@ class CustomLcdDisplay : public SpiLcdDisplay {
             lv_obj_set_parent(battery_label_, top_bar_);
             lv_obj_set_style_margin_left(battery_label_, 0, 0);
 
-            // 针对圆形屏幕调整位置
+            // Adjust positions for the circular screen
             //      network  mute  battery     //
             //               status            //
             lv_obj_align(network_label_, LV_ALIGN_TOP_MID, -1.5 * icon_font->line_height, 0);
@@ -96,9 +96,9 @@ class CustomLcdDisplay : public SpiLcdDisplay {
             lv_obj_set_width(low_battery_label_, LV_HOR_RES * 0.75);
             lv_label_set_long_mode(low_battery_label_, LV_LABEL_LONG_SCROLL_CIRCULAR);
 
-            // 针对圆形屏幕调整底部对话框位置，避免被圆角遮挡
+            // Adjust the bottom dialog position for the circular screen to avoid corner clipping
             lv_obj_set_style_pad_bottom(bottom_bar_, 30, 0);
-            lv_obj_set_width(chat_message_label_, LV_HOR_RES * 0.75); // 限制宽度，避免文字贴边
+            lv_obj_set_width(chat_message_label_, LV_HOR_RES * 0.75); // Cap width so text doesn't hit the edge
         }
 };
 
@@ -215,7 +215,7 @@ private:
         int current_volume = codec->output_volume();
         int new_volume = current_volume + (clockwise ? -5 : 5); 
 
-        // 确保音量在有效范围内
+        // Ensure the volume is within the valid range
         if (new_volume > 100) {
             new_volume = 100;
             ESP_LOGW(TAG, "Volume reached maximum limit: %d", new_volume);
@@ -227,7 +227,7 @@ private:
         codec->SetOutputVolume(new_volume);
         ESP_LOGI(TAG, "Volume changed from %d to %d", current_volume, new_volume);
         
-        // 显示通知前检查实际变化
+        // Check the actual change before showing the notification
         if (new_volume != codec->output_volume()) {
             ESP_LOGE(TAG, "Failed to set volume! Expected:%d Actual:%d", 
                    new_volume, codec->output_volume());

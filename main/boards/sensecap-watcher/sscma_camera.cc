@@ -658,21 +658,21 @@ bool SscmaCamera::SetVFlip(bool enabled) {
 }
 
 /**
- * @brief 将摄像头捕获的图像发送到远程服务器进行AI分析和解释
- * 
- * 该函数将当前摄像头缓冲区中的图像编码为JPEG格式，并通过HTTP POST请求
- * 以multipart/form-data的形式发送到指定的解释服务器。服务器将根据提供的
- * 问题对图像进行AI分析并返回结果。
- * 
- * @param question 要向AI提出的关于图像的问题，将作为表单字段发送
- * @return std::string 服务器返回的JSON格式响应字符串
- *         成功时包含AI分析结果，失败时包含错误信息
- *         格式示例：{"success": true, "result": "分析结果"}
- *                  {"success": false, "message": "错误信息"}
- * 
- * @note 调用此函数前必须先调用SetExplainUrl()设置服务器URL
- * @note 函数会等待之前的编码线程完成后再开始新的处理
- * @warning 如果摄像头缓冲区为空或网络连接失败，将返回错误信息
+ * @brief Send the camera's captured image to a remote server for AI analysis and explanation
+ *
+ * Encodes the image in the current camera buffer as JPEG and POSTs it as multipart/form-data
+ * to the configured explain server, which performs AI analysis based on the provided question
+ * and returns the result.
+ *
+ * @param question Question to ask the AI about the image; sent as a form field
+ * @return std::string JSON-formatted response string returned by the server.
+ *         On success it contains the AI analysis; on failure it contains an error message.
+ *         Example: {"success": true, "result": "analysis result"}
+ *                  {"success": false, "message": "error message"}
+ *
+ * @note Call SetExplainUrl() to configure the server URL before calling this function
+ * @note The function waits for any previous encode thread to complete before starting new work
+ * @warning Returns an error message if the camera buffer is empty or the network connection fails
  */
 std::string SscmaCamera::Explain(const std::string& question) {
     if (explain_url_.empty()) {
@@ -681,28 +681,28 @@ std::string SscmaCamera::Explain(const std::string& question) {
 
     auto network = Board::GetInstance().GetNetwork();
     auto http = network->CreateHttp(3);
-    // 构造multipart/form-data请求体
+    // Build the multipart/form-data request body
     std::string boundary = "----ESP32_CAMERA_BOUNDARY";
-    
-    // 构造question字段
+
+    // Build the question field
     std::string question_field;
     question_field += "--" + boundary + "\r\n";
     question_field += "Content-Disposition: form-data; name=\"question\"\r\n";
     question_field += "\r\n";
     question_field += question + "\r\n";
     
-    // 构造文件字段头部
+    // Build the file field header
     std::string file_header;
     file_header += "--" + boundary + "\r\n";
     file_header += "Content-Disposition: form-data; name=\"file\"; filename=\"camera.jpg\"\r\n";
     file_header += "Content-Type: image/jpeg\r\n";
     file_header += "\r\n";
     
-    // 构造尾部
+    // Build the trailer
     std::string multipart_footer;
     multipart_footer += "\r\n--" + boundary + "--\r\n";
 
-    // 配置HTTP客户端，使用分块传输编码
+    // Configure the HTTP client with chunked transfer encoding
     http->SetHeader("Device-Id", SystemInfo::GetMacAddress().c_str());
     http->SetHeader("Client-Id", Board::GetInstance().GetUuid().c_str());
     if (!explain_token_.empty()) {
@@ -715,19 +715,19 @@ std::string SscmaCamera::Explain(const std::string& question) {
         return "{\"success\": false, \"message\": \"Failed to connect to explain URL\"}";
     }
     
-    // 第一块：question字段
+    // Chunk 1: question field
     http->Write(question_field.c_str(), question_field.size());
-    
-    // 第二块：文件字段头部
+
+    // Chunk 2: file field header
     http->Write(file_header.c_str(), file_header.size());
-    
-    // 第三块：JPEG数据
+
+    // Chunk 3: JPEG data
     http->Write((const char*)jpeg_data_.buf, jpeg_data_.len);
 
-    // 第四块：multipart尾部
+    // Chunk 4: multipart trailer
     http->Write(multipart_footer.c_str(), multipart_footer.size());
-    
-    // 结束块
+
+    // End chunk
     http->Write("", 0);
 
     if (http->GetStatusCode() != 200) {

@@ -218,7 +218,7 @@ public:
 
     // Get battery level
     uint8_t GetBatteryLevel() {
-        // ReturnBattery level
+        // Return the battery level
         return battery_level_;
     }
 

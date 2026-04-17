@@ -64,7 +64,7 @@ private:
     PowerSaveTimer* power_save_timer_;
     PowerManager* power_manager_;
     void InitializePowerManager() {
-        // PowerManagerNeed to reuse the button's ADC handle, so call after InitializeButtons
+        // PowerManager needs to reuse the button's ADC handle, so call after InitializeButtons
         // Pass the button's ADC handle pointer so PowerManager can reuse it
         power_manager_ = new PowerManager(GPIO_NUM_NC, &bsp_adc_handle);
     }

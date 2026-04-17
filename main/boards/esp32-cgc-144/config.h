@@ -3,7 +3,7 @@
 
 #include <driver/gpio.h>
 
-// 如果使用插线版本接入电池，请启用下面一行
+// If using the wired version with battery, enable the following line
 //#define ESP32_CGC_144_lite
 
 #define AUDIO_INPUT_SAMPLE_RATE  16000
@@ -35,7 +35,7 @@
 
 #define DISPLAY_SPI_SCLK_HZ     (20 * 1000 * 1000)
 
-// 如果使用240x240的屏幕，请注释下面一行
+// If using a 240x240 screen, comment out the following line
 #define LCD_128X128
 
 #ifdef LCD_128X128

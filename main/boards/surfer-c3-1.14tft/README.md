@@ -1,5 +1,7 @@
-## Surfer-ESP32-C3 开发板
+# surfer-c3-1.14tft board
 
-1、参考立创·实战派C3-ESP32C3开发板，修改了TFT屏幕背光引脚，增加ADC电池电量检测功能;
-2、该开发板 flash 大小为 16MB，编译时注意选择默认的分区表。
+([English](README.md) | [中文](README_zh.md))
 
+This folder contains the board-support code for the **surfer-c3-1.14tft** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
+
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

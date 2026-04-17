@@ -1,11 +1,7 @@
-## 立创·实战派ESP32-C3开发板
+# lichuang-c3-dev board
 
-1、开发板资料：https://wiki.lckfb.com/zh-hans/szpi-esp32c3
+([English](README.md) | [中文](README_zh.md))
 
-2、该开发板 flash 大小为 8MB，编译时注意选择合适的分区表：
+This folder contains the board-support code for the **lichuang-c3-dev** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-```
-Partition Table  --->
-  Partition Table (Custom partition table CSV)  --->
-  (partitions/v2/8m.csv) Custom partition CSV file
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

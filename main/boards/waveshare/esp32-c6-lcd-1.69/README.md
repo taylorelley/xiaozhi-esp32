@@ -1,56 +1,7 @@
-# 产品链接
+# esp32-c6-lcd-1.69 board
 
-[微雪电子 ESP32-C6-Touch-LCD-1.69](https://www.waveshare.net/shop/ESP32-C6-Touch-LCD-1.69.htm)
-[微雪电子 ESP32-C6-LCD-1.69](https://www.waveshare.net/shop/ESP32-C6-LCD-1.69.htm)
+([English](README.md) | [中文](README_zh.md))
 
-# 编译配置命令
+This folder contains the board-support code for the **esp32-c6-lcd-1.69** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-**克隆工程**
-
-```bash
-git clone https://github.com/78/xiaozhi-esp32.git
-```
-
-**进入工程**
-
-```bash
-cd xiaozhi-esp32
-```
-
-**配置编译目标为 ESP32C6**
-
-```bash
-idf.py set-target esp32c6
-```
-
-**打开 menuconfig**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子**
-
-```bash
-Xiaozhi Assistant -> Board Type -> Waveshare ESP32-C6-LCD-1.69
-```
-
-**编译**
-
-```ba
-idf.py build
-```
-
-**下载并打开串口终端**
-
-```bash
-idf.py build flash monitor
-```
-# 按键操作
-## BOOT 按键
-**未连接服务器前单击: 进入配网模式**
-**连接服务器后单击: 唤醒、打断**
-
-## PWR 按键
-**双击：息屏、亮屏**
-**长按：开关机**
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

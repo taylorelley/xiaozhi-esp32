@@ -1,31 +1,7 @@
-【产品简介】
-】支持触摸
-】支持充电
-】独特外形设计
-产品链接1：https://spotpear.cn/shop/ESP32-S3-N16R8-AI-DeepSeek-XiaoZhi-XiaGe-Qwen-DouBao-1.28-inch-LCD.html
-产品链接2：https://spotpear.cn/shop/ESP32-S3-N16R8-AI-DeepSeek-XiaoZhi-XiaGe-Qwen-DouBao-1.28-inch-Round-LCD-BOX-TouchScreen.html
-# 编译配置命令
+# sp-esp32-s3-1.28-box board
 
-**配置编译目标为 ESP32S3：**
+([English](README.md) | [中文](README_zh.md))
 
-```bash
-idf.py set-target esp32s3
-```
+This folder contains the board-support code for the **sp-esp32-s3-1.28-box** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type -> Spotpear ESP32-S3-1.28-BOX
-```
-
-**编译：**
-
-```bash
-idf.py build
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

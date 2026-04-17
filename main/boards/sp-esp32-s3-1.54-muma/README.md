@@ -1,34 +1,7 @@
-【产品简介】
-[] ESP32 S3小木马开发板1.54寸LCD小智muma虾哥AI DeepSeek人工智能语音聊天机器人N16R8
-【功能】
-[] 可爱小木马，支持天气时钟， SD视频播放， AI智能对话所有固件源码开源，适合小孩编程学习，可开发更多功能。
-AI小智支持语音唤醒。触摸版本额外支持触摸唤醒和打断
-显示屏：1.54寸ST7789 240x240分辨率
-产品链接：
-https://spotpear.cn/shop/ESP32-S3-AI-1.54-inch-LCD-Display-TouchScreen-N16R8-muma-DeepSeek/sp-esp32-s3-1.54-muma-W-Bat.html
+# sp-esp32-s3-1.54-muma board
 
-# 编译配置命令
+([English](README.md) | [中文](README_zh.md))
 
-**配置编译目标为 ESP32S3：**
+This folder contains the board-support code for the **sp-esp32-s3-1.54-muma** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-```bash
-idf.py set-target esp32s3
-```
-
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type -> Spotpear ESP32-S3-LCD-1.54-MUMA
-```
-
-**编译：**
-
-```bash
-idf.py build
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

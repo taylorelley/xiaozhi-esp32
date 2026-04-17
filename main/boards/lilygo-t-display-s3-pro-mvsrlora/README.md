@@ -1,32 +1,7 @@
-# 编译配置命令
+# lilygo-t-display-s3-pro-mvsrlora board
 
-**配置编译目标为 ESP32S3：**
+([English](README.md) | [中文](README_zh.md))
 
-```bash
-idf.py set-target esp32s3
-```
+This folder contains the board-support code for the **lilygo-t-display-s3-pro-mvsrlora** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type -> LILYGO T-Display-S3-Pro-MVSRLora
-Or
-Xiaozhi Assistant -> Board Type -> LILYGO T-Display-S3-Pro-MVSRLora_NO_BATTERY
-```
-
-
-**编译：**
-
-```bash
-idf.py build
-```
-
-<a href="https://github.com/Xinyuan-LilyGO/T-Display-S3-Pro" target="_blank" title="LILYGO T-Display-S3-Pro">LILYGO T-Display-S3-Pro</a>
-<br />
-<a href="https://github.com/Xinyuan-LilyGO/T-Display-S3-Pro-MVSRLora" target="_blank" title="LILYGO T-Display-S3-Pro-MVSRLora">LILYGO T-Display-S3-Pro-MVSRLora</a>
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

@@ -1,95 +1,95 @@
-# P3音频格式转换与播放工具
+# P3 Audio Format Conversion and Playback Tools
 
-这个目录包含两个用于处理P3格式音频文件的Python脚本：
+This directory contains several Python scripts for working with the P3 audio format:
 
-## 1. 音频转换工具 (convert_audio_to_p3.py)
+## 1. Audio Conversion Tool (convert_audio_to_p3.py)
 
-将普通音频文件转换为P3格式（4字节header + Opus数据包的流式结构）并进行响度标准化。
+Converts a regular audio file into the P3 format (a stream of 4-byte headers + Opus packets) and applies loudness normalization.
 
-### 使用方法
+### Usage
 
 ```bash
-python convert_audio_to_p3.py <输入音频文件> <输出P3文件> [-l LUFS] [-d]
+python convert_audio_to_p3.py <input audio file> <output P3 file> [-l LUFS] [-d]
 ```
 
-其中，可选选项 `-l` 用于指定响度标准化的目标响度，默认为 -16 LUFS；可选选项 `-d` 可以禁用响度标准化。
+Optional option `-l` sets the target loudness for normalization (default -16 LUFS). Optional option `-d` disables loudness normalization.
 
-如果输入的音频文件符合下面的任一条件，建议使用 `-d` 禁用响度标准化：
-- 音频过短
-- 音频已经调整过响度
-- 音频来自默认 TTS （小智当前使用的 TTS 的默认响度已是 -16 LUFS）
+If the input audio meets any of the following conditions, it is recommended to use `-d` to disable loudness normalization:
+- The audio is very short
+- The audio has already been loudness-adjusted
+- The audio comes from the default TTS (the TTS currently used by LittleWise already has a default loudness of -16 LUFS)
 
-例如：
+Example:
 ```bash
 python convert_audio_to_p3.py input.mp3 output.p3
 ```
 
-## 2. P3音频播放工具 (play_p3.py)
+## 2. P3 Audio Playback Tool (play_p3.py)
 
-播放P3格式的音频文件。
+Plays a P3-format audio file.
 
-### 特性
+### Features
 
-- 解码并播放P3格式的音频文件
-- 在播放结束或用户中断时应用淡出效果，避免破音
-- 支持通过命令行参数指定要播放的文件
+- Decodes and plays P3-format audio files
+- Applies a fade-out at the end of playback or on user interrupt to avoid pops
+- Supports specifying the file to play via a command-line argument
 
-### 使用方法
+### Usage
 
 ```bash
-python play_p3.py <P3文件路径>
+python play_p3.py <P3 file path>
 ```
 
-例如：
+Example:
 ```bash
 python play_p3.py output.p3
 ```
 
-## 3. 音频转回工具 (convert_p3_to_audio.py)
+## 3. Audio Reverse-Conversion Tool (convert_p3_to_audio.py)
 
-将P3格式转换回普通音频文件。
+Converts a P3-format file back to a regular audio file.
 
-### 使用方法
+### Usage
 
 ```bash
-python convert_p3_to_audio.py <输入P3文件> <输出音频文件>
+python convert_p3_to_audio.py <input P3 file> <output audio file>
 ```
 
-输出音频文件需要有扩展名。
+The output audio file must have an extension.
 
-例如：
+Example:
 ```bash
 python convert_p3_to_audio.py input.p3 output.wav
 ```
-## 4. 音频/P3批量转换工具
+## 4. Audio/P3 Batch Conversion Tool
 
-一个图形化的工具，支持批量转换音频到P3，P3到音频
+A graphical tool supporting batch conversion of audio to P3 and P3 to audio.
 
 ![](./img/img.png)
 
-### 使用方法：
+### Usage
 ```bash
 python batch_convert_gui.py
 ```
 
-## 依赖安装
+## Dependency Installation
 
-在使用这些脚本前，请确保安装了所需的Python库：
+Before using these scripts, make sure the required Python libraries are installed:
 
 ```bash
 pip install librosa opuslib numpy tqdm sounddevice pyloudnorm soundfile
 ```
 
-或者使用提供的requirements.txt文件：
+Or use the provided requirements.txt file:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## P3格式说明
+## P3 Format Description
 
-P3格式是一种简单的流式音频格式，结构如下：
-- 每个音频帧由一个4字节的头部和一个Opus编码的数据包组成
-- 头部格式：[1字节类型, 1字节保留, 2字节长度]
-- 采样率固定为16000Hz，单声道
-- 每帧时长为60ms 
+The P3 format is a simple streaming audio format structured as follows:
+- Each audio frame consists of a 4-byte header followed by an Opus-encoded packet
+- Header format: [1 byte type, 1 byte reserved, 2 bytes length]
+- Fixed sample rate of 16000Hz, mono
+- Each frame is 60ms long

@@ -1,44 +1,7 @@
-# ESP32-S3 编译配置指南
+# movecall-cuican-esp32s3 board
 
-## 基本命令
+([English](README.md) | [中文](README_zh.md))
 
-### 设置目标芯片
+This folder contains the board-support code for the **movecall-cuican-esp32s3** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-```bash
-idf.py set-target esp32s3
-```
-
-### 打开配置界面：
-
-```bash
-idf.py menuconfig
-```
-### Flash 配置:
-
-```
-Serial flasher config -> Flash size -> 8 MB
-```
-
-### 分区表配置：
-
-```
-Partition Table -> Custom partition CSV file -> partitions/v2/8m.csv
-```
-
-### 开发板选择：
-
-```
-Xiaozhi Assistant -> Board Type -> Movecall CuiCan 璀璨·AI吊坠
-```
-
-### 启用编译优化：
-
-```
-Component config → Compiler options → Optimization Level → Optimize for size (-Os)
-```
-
-### 编译：
-
-```bash
-idf.py build
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

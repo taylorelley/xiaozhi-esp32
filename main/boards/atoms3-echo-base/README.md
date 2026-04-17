@@ -1,49 +1,7 @@
-# 编译配置命令
+# atoms3-echo-base board
 
-**配置编译目标为 ESP32S3：**
+([English](README.md) | [中文](README_zh.md))
 
-```bash
-idf.py set-target esp32s3
-```
+This folder contains the board-support code for the **atoms3-echo-base** hardware. The original maintainer-provided documentation is in Chinese; see [README_zh.md](README_zh.md) for the full hardware description, pinout, and build notes.
 
-**打开 menuconfig：**
-
-```bash
-idf.py menuconfig
-```
-
-**选择板子：**
-
-```
-Xiaozhi Assistant -> Board Type -> AtomS3 + Echo Base
-```
-
-**关闭语音唤醒：**
-
-```
-Xiaozhi Assistant -> [ ] 启用语音唤醒与音频处理 -> Unselect
-```
-
-**修改 flash 大小：**
-
-```
-Serial flasher config -> Flash size -> 8 MB
-```
-
-**修改分区表：**
-
-```
-Partition Table -> Custom partition CSV file -> partitions/v2/8m.csv
-```
-
-**关闭片外 PSRAM：**
-
-```
-Component config -> ESP PSRAM -> [ ] Support for external, SPI-connected RAM -> Unselect
-```
-
-**编译：**
-
-```bash
-idf.py build
-```
+An English translation of this document is on the project backlog. Until then, the Chinese version is the authoritative reference and the code itself is the source of truth for GPIOs, display driver choice, and build flags (see `config.h` and the Kconfig.projbuild board entry).

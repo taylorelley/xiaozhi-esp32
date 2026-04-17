@@ -64,7 +64,7 @@ private:
         }
         average_adc /= adc_values_.size();
 
-        // liteDefine battery capacity ranges
+        // Lite: define battery capacity ranges
         const struct {
             uint16_t adc;
             uint8_t level;

@@ -1,5 +1,5 @@
 /*
-    EDA机器狗控制器 - MCP协议版本
+    EDA robot dog controller - MCP protocol version
 */
 
 #include <esp_log.h>
@@ -54,7 +54,7 @@ private:
     while (true) {
       if (xQueueReceive(controller->action_queue_, &params,
                         pdMS_TO_TICKS(1000)) == pdTRUE) {
-        ESP_LOGI(TAG, "执行动作: %d", params.action_type);
+        ESP_LOGI(TAG, "Executing action: %d", params.action_type);
         controller->is_action_in_progress_ = true;
 
         switch (params.action_type) {
@@ -112,7 +112,7 @@ private:
 
   void QueueAction(int action_type, int steps, int speed, int direction,
                    int height) {
-    ESP_LOGI(TAG, "动作控制: 类型=%d, 步数=%d, 速度=%d, 方向=%d, 高度=%d",
+    ESP_LOGI(TAG, "Action control: type=%d, steps=%d, speed=%d, direction=%d, height=%d",
              action_type, steps, speed, direction, height);
 
     DogActionParams params = {action_type, steps, speed, direction, height};
@@ -129,7 +129,7 @@ private:
     int right_rear_leg = settings.GetInt("right_rear_leg", 0);
 
     ESP_LOGI(TAG,
-             "从NVS加载微调设置: 左前腿=%d, 左后腿=%d, 右前腿=%d, 右后腿=%d",
+             "Loaded trim settings from NVS: left_front_leg=%d, left_rear_leg=%d, right_front_leg=%d, right_rear_leg=%d",
              left_front_leg, left_rear_leg, right_front_leg, right_rear_leg);
 
     dog_.SetTrims(left_front_leg, left_rear_leg, right_front_leg,
@@ -141,7 +141,7 @@ public:
     dog_.Init(LEFT_FRONT_LEG_PIN, LEFT_REAR_LEG_PIN, RIGHT_FRONT_LEG_PIN,
               RIGHT_REAR_LEG_PIN);
 
-    ESP_LOGI(TAG, "EDA机器狗初始化完成");
+    ESP_LOGI(TAG, "EDA robot dog initialization complete");
 
     LoadTrimsFromNVS();
 
@@ -155,14 +155,14 @@ public:
   void RegisterMcpTools() {
     auto &mcp_server = McpServer::GetInstance();
 
-    ESP_LOGI(TAG, "开始注册MCP工具...");
+    ESP_LOGI(TAG, "Starting MCP tool registration...");
 
-    // 基础移动动作
+    // Basic movement actions
     mcp_server.AddTool(
         "self.dog.walk",
-        "行走。steps: 行走步数(1-100); speed: "
-        "行走速度(500-2000，数值越小越快); "
-        "direction: 行走方向(-1=后退, 1=前进)",
+        "Walk. steps: number of steps (1-100); speed: "
+        "walking speed (500-2000, smaller is faster); "
+        "direction: walking direction (-1=backward, 1=forward)",
         PropertyList({Property("steps", kPropertyTypeInteger, 4, 1, 100),
                       Property("speed", kPropertyTypeInteger, 1000, 500, 2000),
                       Property("direction", kPropertyTypeInteger, 1, -1, 1)}),
@@ -176,9 +176,9 @@ public:
 
     mcp_server.AddTool(
         "self.dog.turn",
-        "转身。steps: 转身步数(1-100); speed: "
-        "转身速度(500-2000，数值越小越快); "
-        "direction: 转身方向(1=左转, -1=右转)",
+        "Turn. steps: number of turn steps (1-100); speed: "
+        "turn speed (500-2000, smaller is faster); "
+        "direction: turn direction (1=turn left, -1=turn right)",
         PropertyList({Property("steps", kPropertyTypeInteger, 4, 1, 100),
                       Property("speed", kPropertyTypeInteger, 2000, 500, 2000),
                       Property("direction", kPropertyTypeInteger, 1, -1, 1)}),
@@ -190,9 +190,9 @@ public:
           return true;
         });
 
-    // 姿态动作
+    // Posture actions
     mcp_server.AddTool("self.dog.sit",
-                       "坐下。speed: 坐下速度(500-2000，数值越小越快)",
+                       "Sit. speed: sit-down speed (500-2000, smaller is faster)",
                        PropertyList({Property("speed", kPropertyTypeInteger,
                                               1500, 500, 2000)}),
                        [this](const PropertyList &properties) -> ReturnValue {

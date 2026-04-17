@@ -51,7 +51,7 @@ private:
     const std::array<TouchThresholdConfig, 3> TOUCH_THRESHOLD_TABLE = {
         {
             {20, 600, 200000, 240000, 2000000}, // Volume +
-            {40, 600, 200000, 240000, 4000000}, // bootButton
+            {40, 600, 200000, 240000, 4000000}, // Boot button
             {60, 600, 200000, 240000, 2000000}  // Volume -
         }
     };

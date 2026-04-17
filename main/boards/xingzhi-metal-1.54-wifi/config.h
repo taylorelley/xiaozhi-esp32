@@ -46,7 +46,7 @@
 #define POWER_USB_IN GPIO_NUM_1
 #define Power_Control GPIO_NUM_48               // Power control pin
 #define Power_Dec GPIO_NUM_47                   // Power-button detection pin
-#define POWER_CBS_ADC_UNIT ADC_UNIT_1           // adcDetection commonunit GPIO1
+#define POWER_CBS_ADC_UNIT ADC_UNIT_1           // ADC detection common unit, GPIO1
 #define POWER_USBIN_ADC_CHANNEL ADC_CHANNEL_0   // Detect USB plug-in, GPIO1
 #define POWER_BATTERY_ADC_CHANNEL ADC_CHANNEL_6 // Battery level detection GPIO7
 

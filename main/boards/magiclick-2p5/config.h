@@ -39,8 +39,8 @@
 #define DISPLAY_HEIGHT 128
 
 // Dynamically select screen type and configuration based on the PCB version 
-#define PCB_VERSION_2_5A  1 // UseGC9107
-#define PCB_VERSION_2_5A1 2 // UseST7735
+#define PCB_VERSION_2_5A  1 // Uses GC9107
+#define PCB_VERSION_2_5A1 2 // Uses ST7735
 
 #define DISPLAY_OFFSET_X 0
 #define DISPLAY_OFFSET_Y 0

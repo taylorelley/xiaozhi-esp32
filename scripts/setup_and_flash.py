@@ -113,6 +113,7 @@ class WizardState:
     custom_wake_word: Optional[str] = None
     custom_wake_word_display: Optional[str] = None
     custom_wake_word_threshold: Optional[int] = None
+    custom_wake_word_multinet: Optional[str] = None
     language: Optional[str] = None
     wifi_provisioning: Optional[str] = None
     server_base_url: Optional[str] = None
@@ -748,10 +749,26 @@ def _step_pick_wake_word(state: WizardState) -> None:
             validate=lambda v: v.isdigit() and 1 <= int(v) <= 99 or "Enter an integer 1-99",
         )
         state.custom_wake_word_threshold = int(threshold)
+
+        # esp-sr's multinet selection defaults to NONE, so the build would fail in
+        # scripts/build_default_assets.py without an explicit CONFIG_SR_MN_* pick.
+        mn_choices = [
+            Choice(title="English  [SR_MN_EN_MULTINET7_QUANT]", value="SR_MN_EN_MULTINET7_QUANT"),
+            Choice(title="Chinese (pinyin)  [SR_MN_CN_MULTINET7_QUANT]", value="SR_MN_CN_MULTINET7_QUANT"),
+        ]
+        default_mn = state.custom_wake_word_multinet or (
+            "SR_MN_CN_MULTINET7_QUANT" if state.language == "LANGUAGE_ZH_CN" else "SR_MN_EN_MULTINET7_QUANT"
+        )
+        state.custom_wake_word_multinet = _ask_select(
+            "Wake-word recognition model (must match the phrase's language)",
+            choices=mn_choices,
+            default=default_mn,
+        )
     else:
         state.custom_wake_word = None
         state.custom_wake_word_display = None
         state.custom_wake_word_threshold = None
+        state.custom_wake_word_multinet = None
 
 
 def _step_pick_language(state: WizardState) -> None:
@@ -953,6 +970,7 @@ def _step_confirm(state: WizardState) -> bool:
             ("  custom phrase", state.custom_wake_word),
             ("  display text", state.custom_wake_word_display),
             ("  threshold", state.custom_wake_word_threshold),
+            ("  multinet model", state.custom_wake_word_multinet),
         ]
     rows += [
         ("Language", state.language),
@@ -1005,6 +1023,8 @@ def _build_overrides_text(state: WizardState) -> str:
             lines.append(f'CONFIG_CUSTOM_WAKE_WORD_DISPLAY="{state.custom_wake_word_display}"')
         if state.custom_wake_word_threshold is not None:
             lines.append(f"CONFIG_CUSTOM_WAKE_WORD_THRESHOLD={state.custom_wake_word_threshold}")
+        if state.custom_wake_word_multinet:
+            lines.append(f"CONFIG_{state.custom_wake_word_multinet}=y")
 
     # BluFi requires a handful of selects that Kconfig won't auto-resolve when
     # we inject through SDKCONFIG_DEFAULTS. Mirror release.py's behaviour.

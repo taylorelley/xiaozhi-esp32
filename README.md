@@ -121,6 +121,7 @@ The firmware connects to the official [xiaozhi.me](https://xiaozhi.me) server by
 
 ### Developer Documentation
 
+- [Build and Flash Guide](docs/build.md) - Set up ESP-IDF, select a board, build, and flash
 - [Custom Board Guide](docs/custom-board.md) - Learn how to create custom boards for LittleWise AI
 - [MCP Protocol IoT Control Usage](docs/mcp-usage.md) - Learn how to control IoT devices via MCP protocol
 - [MCP Protocol Interaction Flow](docs/mcp-protocol.md) - Device-side MCP protocol implementation

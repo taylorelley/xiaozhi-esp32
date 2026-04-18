@@ -73,6 +73,16 @@ STATE_PATH = ROOT / "scripts" / ".wizard_state.json"
 
 TARGETS = ["esp32", "esp32s3", "esp32c3", "esp32c5", "esp32c6", "esp32p4"]
 
+# Default version pin for auto-install — tracks what CI builds against.
+DEFAULT_IDF_VERSION = "v5.5.2"
+DEFAULT_IDF_INSTALL_PATH = Path.home() / "esp" / "esp-idf"
+COMMON_IDF_LOCATIONS = [
+    Path.home() / "esp" / "esp-idf",
+    Path.home() / ".espressif" / "esp-idf",
+    Path("/opt/esp-idf"),
+    Path("/opt/esp/esp-idf"),
+]
+
 # Field names that should be entered as masked input.
 SECRET_FIELD_RE = re.compile(
     r"(api_?key|access_token|personal_access_token|api_password|secret|password|authorization|app_?id|bot_id|user_id)$",
@@ -481,16 +491,149 @@ def _ping_ota(url: str, timeout: float = 2.0) -> Optional[dict[str, Any]]:
 # ===========================================================================
 
 
-def _ensure_idf_available(dry_run: bool) -> None:
-    if shutil.which("idf.py") is None and not dry_run:
-        _abort(
-            "idf.py not found on PATH.\n"
-            "Source ESP-IDF first:\n"
-            "  . $IDF_PATH/export.sh        (Linux/macOS)\n"
-            "  %IDF_PATH%\\export.bat       (Windows cmd)"
+@dataclass
+class IdfEnv:
+    root: Optional[Path] = None
+    export_script: Optional[Path] = None
+    already_sourced: bool = False
+
+    def is_ready(self) -> bool:
+        return self.already_sourced or (
+            self.export_script is not None and self.export_script.exists()
         )
-    if not os.environ.get("IDF_PATH") and not dry_run:
-        print("[warn] $IDF_PATH is not set; the build may fail.", file=sys.stderr)
+
+
+def _export_script_for(root: Path) -> Path:
+    return root / ("export.bat" if os.name == "nt" else "export.sh")
+
+
+def _install_script_for(root: Path) -> Path:
+    return root / ("install.bat" if os.name == "nt" else "install.sh")
+
+
+def _detect_idf_env() -> Optional[IdfEnv]:
+    """Locate ESP-IDF without requiring the user to source anything."""
+    # 1. Already sourced — idf.py is on PATH.
+    if shutil.which("idf.py") is not None:
+        idf_path = os.environ.get("IDF_PATH")
+        root = Path(idf_path) if idf_path else None
+        export = _export_script_for(root) if root else None
+        return IdfEnv(root=root, export_script=export, already_sourced=True)
+
+    # 2. $IDF_PATH points somewhere with a usable export script.
+    idf_path = os.environ.get("IDF_PATH")
+    if idf_path:
+        root = Path(idf_path).expanduser()
+        export = _export_script_for(root)
+        if export.exists():
+            return IdfEnv(root=root, export_script=export)
+
+    # 3. Fall back to well-known install locations.
+    for root in COMMON_IDF_LOCATIONS:
+        export = _export_script_for(root)
+        if export.exists():
+            return IdfEnv(root=root, export_script=export)
+
+    return None
+
+
+def _run_shell(cmd: list[str], dry_run: bool, cwd: Optional[Path] = None) -> None:
+    pretty = " ".join(shlex.quote(c) for c in cmd)
+    print(f"\n$ {pretty}")
+    if dry_run:
+        return
+    completed = subprocess.run(cmd, cwd=cwd)
+    if completed.returncode != 0:
+        _abort(f"Command failed (exit {completed.returncode}): {pretty}")
+
+
+def _install_idf(dry_run: bool, default_target: Optional[str]) -> IdfEnv:
+    """Interactively clone ESP-IDF and run install.sh, returning a ready IdfEnv."""
+    path_str = _ask_text(
+        "Install ESP-IDF to",
+        default=str(DEFAULT_IDF_INSTALL_PATH),
+        validate=lambda v: len(v.strip()) > 0 or "Required",
+    )
+    version = _ask_text("ESP-IDF version tag", default=DEFAULT_IDF_VERSION)
+    default_targets = default_target if default_target else "all"
+    targets = _ask_text(
+        "Install toolchains for which targets (comma-separated, or 'all')",
+        default=default_targets,
+    ).strip() or "all"
+
+    root = Path(path_str).expanduser().resolve()
+    export = _export_script_for(root)
+
+    if not (root / ".git").exists():
+        root.parent.mkdir(parents=True, exist_ok=True)
+        _run_shell(
+            [
+                "git",
+                "clone",
+                "--branch",
+                version,
+                "--recursive",
+                "--shallow-submodules",
+                "--depth",
+                "1",
+                "https://github.com/espressif/esp-idf.git",
+                str(root),
+            ],
+            dry_run=dry_run,
+        )
+    else:
+        print(f"[info] ESP-IDF already present at {root}, skipping clone.")
+
+    install_script = _install_script_for(root)
+    if install_script.exists() or dry_run:
+        _run_shell([str(install_script), targets], dry_run=dry_run, cwd=root)
+    else:
+        _abort(f"Install script not found at {install_script}")
+
+    if not dry_run and not export.exists():
+        _abort(f"Expected export script not found at {export} after install.")
+
+    return IdfEnv(root=root, export_script=export)
+
+
+def _ensure_idf_env(dry_run: bool, default_target: Optional[str]) -> IdfEnv:
+    env = _detect_idf_env()
+
+    if env is not None and env.is_ready():
+        source = (
+            "idf.py on PATH (already sourced)"
+            if env.already_sourced
+            else f"auto-detected at {env.root}"
+        )
+        print(f"[info] ESP-IDF: {source}")
+        return env
+
+    print(
+        "ESP-IDF was not found on PATH, in $IDF_PATH, or in any of:\n  "
+        + "\n  ".join(str(p) for p in COMMON_IDF_LOCATIONS)
+    )
+
+    if os.name == "nt":
+        print(
+            "Automated install is not supported on native Windows yet. "
+            "Use the ESP-IDF installer (https://dl.espressif.com/dl/esp-idf/) "
+            "or run the wizard from MSYS2/WSL.",
+            file=sys.stderr,
+        )
+        _abort("Cannot continue without ESP-IDF.")
+
+    if dry_run:
+        print("[dry-run] would offer to install ESP-IDF into "
+              f"{DEFAULT_IDF_INSTALL_PATH} (version {DEFAULT_IDF_VERSION})")
+        return IdfEnv()
+
+    if not _ask_confirm("Install ESP-IDF now?", default=True):
+        _abort(
+            "Cannot continue without ESP-IDF. Install manually and retry:\n"
+            "  https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/"
+        )
+
+    return _install_idf(dry_run=dry_run, default_target=default_target)
 
 
 def _ask_select(message: str, choices: list[Any], default: Any = None) -> Any:
@@ -920,17 +1063,51 @@ def _maybe_clean_build_dir(state: WizardState, dry_run: bool) -> None:
             sdkconfig_path.unlink()
 
 
-def _run(cmd: list[str], dry_run: bool) -> None:
-    pretty = " ".join(shlex.quote(c) for c in cmd)
-    print(f"\n$ {pretty}")
-    if dry_run:
-        return
-    completed = subprocess.run(cmd, cwd=ROOT)
+def _run_idf(env: IdfEnv, idf_args: list[str], dry_run: bool) -> None:
+    """Run `idf.py <args>` through the ESP-IDF environment.
+
+    If ESP-IDF was already sourced into the current shell, invoke idf.py directly.
+    Otherwise spawn `bash -c '. export.sh && idf.py …'` so no manual sourcing is needed.
+    """
+    if env.already_sourced:
+        cmd = ["idf.py"] + idf_args
+        pretty = " ".join(shlex.quote(c) for c in cmd)
+        print(f"\n$ {pretty}")
+        if dry_run:
+            return
+        completed = subprocess.run(cmd, cwd=ROOT)
+    else:
+        if env.export_script is None:
+            if dry_run:
+                print("\n$ [no IDF env available in dry-run — would run] idf.py " + " ".join(idf_args))
+                return
+            _abort("No ESP-IDF environment available — cannot run idf.py.")
+        if os.name == "nt":
+            inner = (
+                f'call "{env.export_script}" && idf.py '
+                + subprocess.list2cmdline(idf_args)
+            )
+            cmd = ["cmd.exe", "/c", inner]
+            pretty = inner
+        else:
+            inner = (
+                ". "
+                + shlex.quote(str(env.export_script))
+                + " && idf.py "
+                + " ".join(shlex.quote(a) for a in idf_args)
+            )
+            cmd = ["bash", "-c", inner]
+            pretty = f"bash -c {shlex.quote(inner)}"
+        print(f"\n$ {pretty}")
+        if dry_run:
+            return
+        completed = subprocess.run(cmd, cwd=ROOT)
+
     if completed.returncode != 0:
-        _abort(f"Command failed (exit {completed.returncode}): {pretty}")
+        _abort(f"idf.py command failed (exit {completed.returncode})")
 
 
-def _execute(state: WizardState, dry_run: bool) -> None:
+def _execute(state: WizardState, env: IdfEnv, dry_run: bool) -> None:
     overrides_text = _build_overrides_text(state)
     if dry_run:
         print(f"\n--- would write {OVERRIDES_PATH} ---")
@@ -948,12 +1125,16 @@ def _execute(state: WizardState, dry_run: bool) -> None:
     chain = _sdkconfig_defaults_chain(state.target or "")
     print(f"\nSDKCONFIG_DEFAULTS chain:\n  {chain}")
 
-    _run(["idf.py", "-D", f"SDKCONFIG_DEFAULTS={chain}", "set-target", state.target or ""], dry_run=dry_run)
-    _run(["idf.py", "build"], dry_run=dry_run)
+    _run_idf(
+        env,
+        ["-D", f"SDKCONFIG_DEFAULTS={chain}", "set-target", state.target or ""],
+        dry_run=dry_run,
+    )
+    _run_idf(env, ["build"], dry_run=dry_run)
 
     if state.serial_port:
         try:
-            _run(["idf.py", "-p", state.serial_port, "flash", "monitor"], dry_run=dry_run)
+            _run_idf(env, ["-p", state.serial_port, "flash", "monitor"], dry_run=dry_run)
         except SystemExit:
             raise
         except KeyboardInterrupt:
@@ -981,11 +1162,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    _ensure_idf_available(dry_run=args.dry_run)
-
     state = WizardState.load() if args.resume else WizardState()
 
     _step_pick_target(state)
+    env = _ensure_idf_env(dry_run=args.dry_run, default_target=state.target)
+
     _step_pick_board(state)
     _step_pick_partition(state)
     _step_pick_wake_word(state)
@@ -1000,7 +1181,7 @@ def main() -> None:
         sys.exit(0)
 
     state.save()
-    _execute(state, dry_run=args.dry_run)
+    _execute(state, env, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

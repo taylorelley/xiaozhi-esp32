@@ -7,12 +7,13 @@ This guide covers building the XiaoZhi AI firmware from source and flashing it t
 If you'd rather not step through `menuconfig` by hand, run the interactive wizard. It picks the target, board, partition, wake-word, language, WiFi provisioning method, OTA URL, and serial port for you, then runs `idf.py set-target`, `build`, `flash`, and `monitor`. It can also write a starter `data/.config.yaml` into a local clone of [xiaozhi-esp32-server](https://github.com/xinnan-tech/xiaozhi-esp32-server) so the device boots straight into a working pipeline with your chosen LLM/ASR/TTS providers.
 
 ```bash
-. $IDF_PATH/export.sh
 pip install -r scripts/requirements.txt
 python scripts/setup_and_flash.py            # full wizard
 python scripts/setup_and_flash.py --dry-run  # preview generated configs without writing
 python scripts/setup_and_flash.py --resume   # prefill answers from the previous run
 ```
+
+You do **not** need to source `export.sh` first. The wizard looks for an existing ESP-IDF checkout on `PATH`, in `$IDF_PATH`, or in common locations (`~/esp/esp-idf`, `~/.espressif/esp-idf`, `/opt/esp-idf`, `/opt/esp/esp-idf`). If none is found, it offers to git-clone the pinned release (`v5.5.2`) and run `install.sh` for your chosen target. All subsequent `idf.py` calls are wrapped in `bash -c '. export.sh && idf.py …'`, so nothing leaks outside the script. On native Windows, install ESP-IDF via Espressif's installer or use WSL/MSYS2.
 
 The wizard composes its choices into a `SDKCONFIG_DEFAULTS` chain rather than mutating `sdkconfig`, so you can still run `idf.py menuconfig` afterward and your edits will stick. The rest of this document describes the manual flow, which the wizard wraps.
 

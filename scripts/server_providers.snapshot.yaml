@@ -1,0 +1,569 @@
+# Snapshot of the provider sections of xiaozhi-esp32-server/main/xiaozhi-server/config.yaml.
+# Consumed by scripts/setup_and_flash.py when no local server checkout is supplied.
+# Regenerate by running scripts/update_provider_snapshot.py after the server's config.yaml changes.
+selected_module:
+  VAD: SileroVAD
+  ASR: OpenaiASR
+  LLM: GeminiLLM
+  VLLM: GeminiVLLM
+  TTS: EdgeTTS
+  Memory: nomem
+  Intent: function_call
+VAD:
+  SileroVAD:
+    type: silero
+    threshold: 0.5
+    threshold_low: 0.3
+    model_dir: models/snakers4_silero-vad
+    min_silence_duration_ms: 200
+ASR:
+  FunASR:
+    type: fun_local
+    model_dir: models/SenseVoiceSmall
+    output_dir: tmp/
+  FunASRServer:
+    type: fun_server
+    host: 127.0.0.1
+    port: 10096
+    is_ssl: true
+    api_key: none
+    output_dir: tmp/
+  SherpaASR:
+    type: sherpa_onnx_local
+    model_dir: models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+    output_dir: tmp/
+    model_type: sense_voice
+  SherpaParaformerASR:
+    type: sherpa_onnx_local
+    model_dir: models/sherpa-onnx-paraformer-zh-small-2024-03-09
+    output_dir: tmp/
+    model_type: paraformer
+  DoubaoASR:
+    type: doubao
+    appid: your Volcengine TTS service appid
+    access_token: your Volcengine TTS service access_token
+    cluster: volcengine_input_common
+    boosting_table_name: (optional) your hot-word file name
+    correct_table_name: (optional) your replacement-word file name
+    output_dir: tmp/
+  DoubaoStreamASR:
+    type: doubao_stream
+    appid: your Volcengine TTS service appid
+    access_token: your Volcengine TTS service access_token
+    cluster: volcengine_input_common
+    boosting_table_name: (optional) your hot-word file name
+    correct_table_name: (optional) your replacement-word file name
+    enable_multilingual: false
+    end_window_size: 200
+    output_dir: tmp/
+  TencentASR:
+    type: tencent
+    appid: your Tencent TTS service appid
+    secret_id: your Tencent TTS service secret_id
+    secret_key: your Tencent TTS service secret_key
+    output_dir: tmp/
+  AliyunASR:
+    type: aliyun
+    appkey: your Alibaba Cloud Intelligent Speech Interaction service project Appkey
+    token: your Alibaba Cloud Intelligent Speech Interaction service AccessToken (temporary, valid for 24 hours; for long-term use, fill in the access_key_id and access_key_secret below)
+    access_key_id: your Alibaba Cloud account access_key_id
+    access_key_secret: your Alibaba Cloud account access_key_secret
+    output_dir: tmp/
+  AliyunStreamASR:
+    type: aliyun_stream
+    appkey: your Alibaba Cloud Intelligent Speech Interaction service project Appkey
+    token: your Alibaba Cloud Intelligent Speech Interaction service AccessToken (temporary, valid for 24 hours; for long-term use, fill in the access_key_id and access_key_secret below)
+    access_key_id: your Alibaba Cloud account access_key_id
+    access_key_secret: your Alibaba Cloud account access_key_secret
+    host: nls-gateway-cn-shanghai.aliyuncs.com
+    max_sentence_silence: 800
+    output_dir: tmp/
+  BaiduASR:
+    type: baidu
+    app_id: your Baidu Speech Technology AppID
+    api_key: your Baidu Speech Technology APIKey
+    secret_key: your Baidu Speech Technology SecretKey
+    dev_pid: 1537
+    output_dir: tmp/
+  OpenaiASR:
+    type: openai
+    api_key: your OpenAI API key
+    base_url: https://api.openai.com/v1/audio/transcriptions
+    model_name: gpt-4o-mini-transcribe
+    output_dir: tmp/
+  GroqASR:
+    type: openai
+    api_key: your Groq API key
+    base_url: https://api.groq.com/openai/v1/audio/transcriptions
+    model_name: whisper-large-v3-turbo
+    output_dir: tmp/
+  VoskASR:
+    type: vosk
+    model_path: your model path, e.g. models/vosk/vosk-model-small-cn-0.22
+    output_dir: tmp/
+  Qwen3ASRFlash:
+    type: qwen3_asr_flash
+    api_key: your Alibaba Cloud Bailian API key
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    model_name: qwen3-asr-flash
+    output_dir: tmp/
+    enable_lid: true
+    enable_itn: true
+    context: ''
+  XunfeiStreamASR:
+    type: xunfei_stream
+    app_id: your APPID
+    api_key: your APIKey
+    api_secret: your APISecret
+    domain: slm
+    language: zh_cn
+    accent: mandarin
+    output_dir: tmp/
+  AliyunBLStreamASR:
+    type: aliyunbl_stream
+    api_key: your Alibaba Cloud Bailian API key
+    model: paraformer-realtime-v2
+    format: pcm
+    sample_rate: 16000
+    disfluency_removal_enabled: false
+    semantic_punctuation_enabled: false
+    max_sentence_silence: 200
+    multi_threshold_mode_enabled: false
+    punctuation_prediction_enabled: true
+    inverse_text_normalization_enabled: true
+    output_dir: tmp/
+LLM:
+  AliLLM:
+    type: openai
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    model_name: qwen-flash
+    api_key: your deepseek web key
+    temperature: 0.7
+    max_tokens: 500
+    top_p: 1
+    frequency_penalty: 0
+  AliAppLLM:
+    type: AliBL
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    app_id: your app_id
+    api_key: your api_key
+    is_no_prompt: true
+    ali_memory_id: false
+  DoubaoLLM:
+    type: openai
+    base_url: https://ark.cn-beijing.volces.com/api/v3
+    model_name: doubao-1-5-pro-32k-250115
+    api_key: your doubao web key
+  DeepSeekLLM:
+    type: openai
+    model_name: deepseek-chat
+    url: https://api.deepseek.com
+    api_key: your deepseek web key
+  ChatGLMLLM:
+    type: openai
+    model_name: glm-4-flash
+    url: https://open.bigmodel.cn/api/paas/v4/
+    api_key: your chat-glm web key
+  OllamaLLM:
+    type: ollama
+    model_name: llama3.2
+    base_url: http://localhost:11434
+  OllamaCloudLLM:
+    type: ollama
+    model_name: gpt-oss:120b
+    base_url: https://ollama.com/v1
+    api_key: your ollama cloud api key
+  DifyLLM:
+    type: dify
+    base_url: https://api.dify.ai/v1
+    api_key: your DifyLLM web key
+    mode: chat-messages
+  GeminiLLM:
+    type: gemini
+    api_key: your gemini web key
+    model_name: gemini-2.0-flash
+    http_proxy: ''
+    https_proxy: ''
+  CozeLLM:
+    type: coze
+    bot_id: your bot_id
+    user_id: your user_id
+    personal_access_token: your coze personal access token
+  VolcesAiGatewayLLM:
+    type: openai
+    base_url: https://ai-gateway.vei.volces.com/v1
+    model_name: doubao-pro-32k-functioncall
+    api_key: your gateway access key
+  LMStudioLLM:
+    type: openai
+    model_name: deepseek-r1-distill-llama-8b@q4_k_m
+    url: http://localhost:1234/v1
+    api_key: lm-studio
+  HomeAssistant:
+    type: homeassistant
+    base_url: http://homeassistant.local:8123
+    agent_id: conversation.chatgpt
+    api_key: your Home Assistant API access token
+  FastgptLLM:
+    type: fastgpt
+    base_url: https://host/api/v1
+    api_key: your fastgpt key
+    variables:
+      k: v
+      k2: v2
+  XinferenceLLM:
+    type: xinference
+    model_name: qwen2.5:72b-AWQ
+    base_url: http://localhost:9997
+  XinferenceSmallLLM:
+    type: xinference
+    model_name: qwen2.5:3b-AWQ
+    base_url: http://localhost:9997
+  OpenAILLM:
+    type: openai
+    base_url: https://api.openai.com/v1
+    model_name: gpt-4o-mini
+    api_key: your openai api key
+    temperature: 0.7
+    max_tokens: 500
+  AnthropicLLM:
+    type: anthropic
+    base_url: https://api.anthropic.com
+    model_name: claude-sonnet-4-5
+    api_key: your anthropic api key
+    max_tokens: 1024
+    temperature: 0.7
+  GroqLLM:
+    type: openai
+    base_url: https://api.groq.com/openai/v1
+    model_name: llama-3.3-70b-versatile
+    api_key: your groq api key
+    temperature: 0.7
+    max_tokens: 500
+  OpenRouterLLM:
+    type: openai
+    base_url: https://openrouter.ai/api/v1
+    model_name: openai/gpt-4o-mini
+    api_key: your openrouter api key
+    temperature: 0.7
+    max_tokens: 500
+VLLM:
+  ChatGLMVLLM:
+    type: openai
+    model_name: glm-4v-flash
+    url: https://open.bigmodel.cn/api/paas/v4/
+    api_key: your api_key
+  QwenVLVLLM:
+    type: openai
+    model_name: qwen3.5-flash
+    url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key: your api_key
+  XunfeiSparkLLM:
+    type: openai
+    base_url: https://ark.cn-beijing.volces.com/api/v3
+    model_name: lite
+    api_key: your api_password
+  OpenAIVLLM:
+    type: openai
+    url: https://api.openai.com/v1
+    model_name: gpt-4o-mini
+    api_key: your openai api key
+  GeminiVLLM:
+    type: openai
+    url: https://generativelanguage.googleapis.com/v1beta/openai/
+    model_name: gemini-2.0-flash
+    api_key: your gemini api key
+  AnthropicVLLM:
+    type: anthropic
+    model_name: claude-sonnet-4-5
+    api_key: your anthropic api key
+TTS:
+  EdgeTTS:
+    type: edge
+    voice: en-US-AriaNeural
+    output_dir: tmp/
+  DoubaoTTS:
+    type: doubao
+    api_url: https://openspeech.bytedance.com/api/v1/tts
+    voice: BV001_streaming
+    output_dir: tmp/
+    authorization: Bearer;
+    appid: your Volcengine TTS service appid
+    access_token: your Volcengine TTS service access_token
+    cluster: volcano_tts
+    speed_ratio: 1.0
+    volume_ratio: 1.0
+    pitch_ratio: 1.0
+  HuoshanDoubleStreamTTS:
+    type: huoshan_double_stream
+    ws_url: wss://openspeech.bytedance.com/api/v3/tts/bidirection
+    appid: your Volcengine TTS service appid
+    access_token: your Volcengine TTS service access_token
+    resource_id: volc.service_type.10029
+    speaker: zh_female_wanwanxiaohe_moon_bigtts
+    enable_ws_reuse: true
+    audio_params:
+      speech_rate: 0
+      loudness_rate: 0
+    additions:
+      post_process:
+        pitch: 0
+  CosyVoiceSiliconflow:
+    type: siliconflow
+    model: FunAudioLLM/CosyVoice2-0.5B
+    voice: FunAudioLLM/CosyVoice2-0.5B:alex
+    output_dir: tmp/
+    access_token: your SiliconFlow API key
+    response_format: wav
+  CozeCnTTS:
+    type: cozecn
+    voice: 7426720361733046281
+    output_dir: tmp/
+    access_token: your coze web key
+    response_format: wav
+  VolcesAiGatewayTTS:
+    type: openai
+    api_key: your gateway access key
+    api_url: https://ai-gateway.vei.volces.com/v1/audio/speech
+    model: doubao-tts
+    voice: zh_male_shaonianzixin_moon_bigtts
+    speed: 1
+    output_dir: tmp/
+  FishSpeech:
+    type: fishspeech
+    output_dir: tmp/
+    response_format: wav
+    reference_id: null
+    reference_audio:
+    - config/assets/wakeup_words.wav
+    reference_text:
+    - 哈啰啊，我是小智啦，声音好听的台湾女孩一枚，超开心认识你耶，最近在忙啥，别忘了给我来点有趣的料哦，我超爱听八卦的啦
+    normalize: true
+    max_new_tokens: 1024
+    chunk_length: 200
+    top_p: 0.7
+    repetition_penalty: 1.2
+    temperature: 0.7
+    streaming: false
+    use_memory_cache: 'on'
+    seed: null
+    channels: 1
+    rate: 44100
+    api_key: your api_key
+    api_url: http://127.0.0.1:8080/v1/tts
+  GPT_SOVITS_V2:
+    type: gpt_sovits_v2
+    url: http://127.0.0.1:9880/tts
+    output_dir: tmp/
+    text_lang: auto
+    ref_audio_path: demo.wav
+    prompt_text: ''
+    prompt_lang: zh
+    top_k: 5
+    top_p: 1
+    temperature: 1
+    text_split_method: cut0
+    batch_size: 1
+    batch_threshold: 0.75
+    split_bucket: true
+    return_fragment: false
+    speed_factor: 1.0
+    streaming_mode: false
+    seed: -1
+    parallel_infer: true
+    repetition_penalty: 1.35
+    aux_ref_audio_paths: []
+  GPT_SOVITS_V3:
+    type: gpt_sovits_v3
+    url: http://127.0.0.1:9880
+    output_dir: tmp/
+    text_language: auto
+    refer_wav_path: caixukun.wav
+    prompt_language: zh
+    prompt_text: ''
+    top_k: 15
+    top_p: 1.0
+    temperature: 1.0
+    cut_punc: ''
+    speed: 1.0
+    inp_refs: []
+    sample_steps: 32
+    if_sr: false
+  MinimaxTTSHTTPStream:
+    type: minimax_httpstream
+    output_dir: tmp/
+    group_id: your Minimax platform groupID
+    api_key: your Minimax platform API key
+    model: speech-01-turbo
+    voice_id: female-shaonv
+  AliyunTTS:
+    type: aliyun
+    output_dir: tmp/
+    appkey: your Alibaba Cloud Intelligent Speech Interaction service project Appkey
+    token: your Alibaba Cloud Intelligent Speech Interaction service AccessToken (temporary, valid for 24 hours; for long-term use, fill in the access_key_id and access_key_secret below)
+    voice: xiaoyun
+    access_key_id: your Alibaba Cloud account access_key_id
+    access_key_secret: your Alibaba Cloud account access_key_secret
+  AliyunStreamTTS:
+    type: aliyun_stream
+    output_dir: tmp/
+    appkey: your Alibaba Cloud Intelligent Speech Interaction service project Appkey
+    token: your Alibaba Cloud Intelligent Speech Interaction service AccessToken (temporary, valid for 24 hours; for long-term use, fill in the access_key_id and access_key_secret below)
+    voice: longxiaochun
+    access_key_id: your Alibaba Cloud account access_key_id
+    access_key_secret: your Alibaba Cloud account access_key_secret
+    host: nls-gateway-cn-beijing.aliyuncs.com
+  TencentTTS:
+    type: tencent
+    output_dir: tmp/
+    appid: your Tencent Cloud AppId
+    secret_id: your Tencent Cloud SecretID
+    secret_key: your Tencent Cloud SecretKey
+    region: ap-guangzhou
+    voice: 101001
+  TTS302AI:
+    type: doubao
+    api_url: https://api.302ai.cn/doubao/tts_hd
+    authorization: 'Bearer '
+    voice: zh_female_wanwanxiaohe_moon_bigtts
+    output_dir: tmp/
+    access_token: your 302 API key
+  GizwitsTTS:
+    type: doubao
+    api_url: https://bytedance.gizwitsapi.com/api/v1/tts
+    authorization: 'Bearer '
+    voice: zh_female_wanwanxiaohe_moon_bigtts
+    output_dir: tmp/
+    access_token: your Gizwits API key
+  ACGNTTS:
+    type: ttson
+    token: your_token
+    voice_id: 1695
+    speed_factor: 1
+    pitch_factor: 0
+    volume_change_dB: 0
+    to_lang: ZH
+    url: https://u95167-bd74-2aef8085.westx.seetacloud.com:8443/flashsummary/tts?token=
+    format: mp3
+    output_dir: tmp/
+    emotion: 1
+  OpenAITTS:
+    type: openai
+    api_key: your openai api key
+    api_url: https://api.openai.com/v1/audio/speech
+    model: tts-1
+    voice: onyx
+    speed: 1
+    output_dir: tmp/
+  CustomTTS:
+    type: custom
+    method: POST
+    url: http://127.0.0.1:8880/v1/audio/speech
+    params:
+      input: '{prompt_text}'
+      response_format: mp3
+      download_format: mp3
+      voice: zf_xiaoxiao
+      lang_code: z
+      return_download_link: true
+      speed: 1
+      stream: false
+    headers: null
+    format: mp3
+    output_dir: tmp/
+  LinkeraiTTS:
+    type: linkerai
+    api_url: https://tts.linkerai.cn/tts
+    audio_format: pcm
+    access_token: U4YdYXVfpwWnk2t5Gp822zWPCuORyeJL
+    voice: OUeAo1mhq6IBExi
+    output_dir: tmp/
+  PaddleSpeechTTS:
+    type: paddle_speech
+    protocol: websocket
+    url: ws://127.0.0.1:8092/paddlespeech/tts/streaming
+    spk_id: 0
+    speed: 1.0
+    volume: 1.0
+    save_path: null
+  IndexStreamTTS:
+    type: index_stream
+    api_url: http://127.0.0.1:11996/tts
+    audio_format: pcm
+    voice: jay_klee
+    output_dir: tmp/
+  AliBLTTS:
+    type: alibl_stream
+    api_key: your api_key
+    model: cosyvoice-v2
+    voice: longcheng_v2
+    output_dir: tmp/
+  XunFeiTTS:
+    type: xunfei_stream
+    api_url: wss://cbm01.cn-huabei-1.xf-yun.com/v1/private/mcd9m97e6
+    app_id: your app_id
+    api_secret: your api_secret
+    api_key: your api_key
+    voice: x5_lingxiaoxuan_flow
+    output_dir: tmp/
+  ElevenLabsTTS:
+    type: elevenlabs
+    api_key: your elevenlabs api key
+    voice_id: 21m00Tcm4TlvDq8ikWAM
+    model_id: eleven_turbo_v2_5
+    output_dir: tmp/
+  AzureTTS:
+    type: azure
+    api_key: your azure speech api key
+    region: eastus
+    voice: en-US-AriaNeural
+    output_dir: tmp/
+  GoogleCloudTTS:
+    type: gcloud
+    api_key: your google cloud api key
+    voice: en-US-Neural2-F
+    language_code: en-US
+    output_dir: tmp/
+Memory:
+  mem0ai:
+    type: mem0ai
+    api_key: your_mem0ai_api_key
+  powermem:
+    type: powermem
+    enable_user_profile: true
+    llm:
+      provider: openai
+      config:
+        api_key: your_LLM_API_key
+        model: qwen-plus
+    embedder:
+      provider: openai
+      config:
+        api_key: your_embedding_model_API_key
+        model: text-embedding-v4
+        openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    vector_store:
+      provider: sqlite
+      config: {}
+  nomem:
+    type: nomem
+  mem_local_short:
+    type: mem_local_short
+    llm: ChatGLMLLM
+Intent:
+  nointent:
+    type: nointent
+  intent_llm:
+    type: intent_llm
+    llm: ChatGLMLLM
+    functions:
+    - get_weather
+    - get_news_from_newsnow
+    - play_music
+  function_call:
+    type: function_call
+    functions:
+    - change_role
+    - get_weather
+    - get_news_from_newsnow
+    - play_music

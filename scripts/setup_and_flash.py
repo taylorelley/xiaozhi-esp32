@@ -70,6 +70,10 @@ MAIN_CMAKE_PATH = ROOT / "main" / "CMakeLists.txt"
 PARTITION_DIR = ROOT / "partitions" / "v2"
 OVERRIDES_PATH = ROOT / "scripts" / ".wizard_overrides.sdkconfig"
 STATE_PATH = ROOT / "scripts" / ".wizard_state.json"
+# Fallback catalog used when the user has no local xiaozhi-esp32-server checkout
+# yet. Regenerate via scripts/update_provider_snapshot.py whenever the server's
+# config.yaml changes.
+PROVIDER_SNAPSHOT_PATH = ROOT / "scripts" / "server_providers.snapshot.yaml"
 
 TARGETS = ["esp32", "esp32s3", "esp32c3", "esp32c5", "esp32c6", "esp32p4"]
 
@@ -115,6 +119,10 @@ class WizardState:
     server_websocket: Optional[str] = None
     bootstrap_server: bool = False
     server_repo_path: Optional[str] = None
+    # When the user has no local server checkout, we still gather provider
+    # choices (driven by the bundled snapshot) and write the resulting YAML
+    # here so they can copy it onto their server later.
+    server_config_out_path: Optional[str] = None
     selected_modules: dict[str, str] = field(default_factory=dict)
     provider_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
     serial_port: Optional[str] = None
@@ -416,14 +424,25 @@ def _collect_board_variants() -> list[BoardVariant]:
 # that way new providers added to the server show up here automatically.
 
 
-def _load_server_config(server_repo: Path) -> dict[str, Any]:
-    cfg_path = server_repo / "main" / "xiaozhi-server" / "config.yaml"
-    if not cfg_path.exists():
+def _load_server_config(server_repo: Optional[Path]) -> dict[str, Any]:
+    """Load provider metadata from a local server checkout, or the bundled snapshot.
+
+    Passing ``None`` (or a path that doesn't contain ``main/xiaozhi-server/
+    config.yaml``) falls back to ``PROVIDER_SNAPSHOT_PATH`` so the wizard can
+    still offer provider choices before a user has cloned the server repo.
+    """
+    if server_repo is not None:
+        cfg_path = server_repo / "main" / "xiaozhi-server" / "config.yaml"
+        if cfg_path.exists():
+            return yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+
+    if not PROVIDER_SNAPSHOT_PATH.exists():
         _abort(
-            f"Server config.yaml not found at {cfg_path}.\n"
-            "Pass the path to a xiaozhi-esp32-server checkout."
+            f"No server checkout was provided and the bundled snapshot is missing at {PROVIDER_SNAPSHOT_PATH}.\n"
+            "Pass the path to a xiaozhi-esp32-server checkout, or regenerate the snapshot with\n"
+            "  python scripts/update_provider_snapshot.py <path-to-server-checkout>"
         )
-    return yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    return yaml.safe_load(PROVIDER_SNAPSHOT_PATH.read_text(encoding="utf-8")) or {}
 
 
 def _list_providers(server_cfg: dict[str, Any], kind: str) -> list[str]:
@@ -785,16 +804,43 @@ def _step_bootstrap_server(state: WizardState) -> None:
     if not state.bootstrap_server:
         state.selected_modules = {}
         state.provider_overrides = {}
+        state.server_config_out_path = None
         return
 
     default_path = state.server_repo_path or str((ROOT.parent / "xiaozhi-esp32-server").resolve())
-    state.server_repo_path = _ask_text(
-        "Path to local xiaozhi-esp32-server checkout",
-        default=default_path,
-        validate=lambda v: Path(v).expanduser().is_dir() or "Path is not a directory",
-    )
 
-    server_cfg = _load_server_config(Path(state.server_repo_path).expanduser())
+    def _validate_repo_path(value: str) -> Any:
+        if not value.strip():
+            # Blank → snapshot mode; valid.
+            return True
+        return Path(value).expanduser().is_dir() or "Path is not a directory"
+
+    entered = _ask_text(
+        "Path to local xiaozhi-esp32-server checkout (leave blank to use the bundled snapshot)",
+        default=default_path,
+        validate=_validate_repo_path,
+    ).strip()
+
+    if entered:
+        state.server_repo_path = entered
+        state.server_config_out_path = None
+        server_cfg = _load_server_config(Path(entered).expanduser())
+    else:
+        # Snapshot mode: no checkout on disk. Ask the user where to park the
+        # generated YAML so they can drop it onto their server later.
+        state.server_repo_path = None
+        default_out = state.server_config_out_path or str(
+            (ROOT.parent / "xiaozhi-server.config.yaml").resolve()
+        )
+        state.server_config_out_path = _ask_text(
+            "Where should I write the generated server config?",
+            default=default_out,
+        ).strip() or default_out
+        server_cfg = _load_server_config(None)
+        print(
+            f"  → using bundled provider snapshot from {PROVIDER_SNAPSHOT_PATH.name}; "
+            "drop the generated file at main/xiaozhi-server/data/.config.yaml on your server."
+        )
 
     state.selected_modules = dict(state.selected_modules)
     state.provider_overrides = dict(state.provider_overrides)
@@ -916,7 +962,10 @@ def _step_confirm(state: WizardState) -> bool:
         ("Bootstrap server", "yes" if state.bootstrap_server else "no"),
     ]
     if state.bootstrap_server:
-        rows.append(("  server repo", state.server_repo_path))
+        if state.server_repo_path:
+            rows.append(("  server repo", state.server_repo_path))
+        else:
+            rows.append(("  server config", f"{state.server_config_out_path} (snapshot mode)"))
         for kind, name in state.selected_modules.items():
             rows.append((f"  {kind}", name))
     rows.append(("Serial port", state.serial_port))
@@ -998,16 +1047,22 @@ def _build_server_config_doc(state: WizardState) -> dict[str, Any]:
 
 
 def _write_server_overrides(state: WizardState, dry_run: bool) -> Optional[Path]:
-    if not state.bootstrap_server or not state.server_repo_path:
+    if not state.bootstrap_server:
         return None
 
-    out_path = (
-        Path(state.server_repo_path).expanduser()
-        / "main"
-        / "xiaozhi-server"
-        / "data"
-        / ".config.yaml"
-    )
+    if state.server_repo_path:
+        out_path = (
+            Path(state.server_repo_path).expanduser()
+            / "main"
+            / "xiaozhi-server"
+            / "data"
+            / ".config.yaml"
+        )
+    elif state.server_config_out_path:
+        out_path = Path(state.server_config_out_path).expanduser()
+    else:
+        return None
+
     doc = _build_server_config_doc(state)
     rendered = (
         "# Written by xiaozhi-esp32/scripts/setup_and_flash.py.\n"

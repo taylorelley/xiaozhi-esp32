@@ -2,6 +2,20 @@
 
 This guide covers building the XiaoZhi AI firmware from source and flashing it to a device. For end users who only need a pre-built binary, see the beginner flashing guide linked from the [README](../README.md).
 
+## Quick start (guided)
+
+If you'd rather not step through `menuconfig` by hand, run the interactive wizard. It picks the target, board, partition, wake-word, language, WiFi provisioning method, OTA URL, and serial port for you, then runs `idf.py set-target`, `build`, `flash`, and `monitor`. It can also write a starter `data/.config.yaml` into a local clone of [xiaozhi-esp32-server](https://github.com/xinnan-tech/xiaozhi-esp32-server) so the device boots straight into a working pipeline with your chosen LLM/ASR/TTS providers.
+
+```bash
+. $IDF_PATH/export.sh
+pip install -r scripts/requirements.txt
+python scripts/setup_and_flash.py            # full wizard
+python scripts/setup_and_flash.py --dry-run  # preview generated configs without writing
+python scripts/setup_and_flash.py --resume   # prefill answers from the previous run
+```
+
+The wizard composes its choices into a `SDKCONFIG_DEFAULTS` chain rather than mutating `sdkconfig`, so you can still run `idf.py menuconfig` afterward and your edits will stick. The rest of this document describes the manual flow, which the wizard wraps.
+
 ## Prerequisites
 
 - **ESP-IDF 5.4 or newer.** The project is developed against ESP-IDF 5.5.x; CI builds with 5.5.2. Follow Espressif's [ESP-IDF Get Started](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html) guide to install the toolchain.

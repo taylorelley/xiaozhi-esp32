@@ -36,6 +36,60 @@ def _abort(msg: str, code: int = 1) -> None:
     sys.exit(code)
 
 
+def _check_serial_port_access(port: str) -> Optional[str]:
+    """Return None if `port` is usable, else a multi-line hint explaining why.
+
+    idf.py itself surfaces a terse `Path '…' is not readable` click error that
+    leaves the user without any recovery guidance. Catch the common POSIX
+    permission / missing-device cases up front so we can point at the real fix.
+    """
+    if not port:
+        return None
+    if os.name == "nt":
+        # Windows COM ports don't expose POSIX perms; let idf.py handle it.
+        return None
+    p = Path(port)
+    if not p.exists():
+        return (
+            f"Serial port '{port}' does not exist.\n"
+            "  Is the device plugged in? Try unplugging and replugging, then "
+            "re-run the wizard (or re-scan from the port picker)."
+        )
+    if os.access(port, os.R_OK | os.W_OK):
+        return None
+
+    lines = [f"Serial port '{port}' is not readable/writable by this user."]
+    if sys.platform.startswith("linux"):
+        try:
+            import grp
+            dev_group = grp.getgrgid(p.stat().st_gid).gr_name
+            user_groups = {grp.getgrgid(g).gr_name for g in os.getgroups()}
+            if dev_group not in user_groups:
+                lines += [
+                    f"  The port is owned by group '{dev_group}'. Add your user with:",
+                    f"    sudo usermod -aG {dev_group} $USER",
+                    f"  Then log out and back in (or run: newgrp {dev_group}).",
+                ]
+            else:
+                lines.append(
+                    "  You are already in the owning group — log out and back in "
+                    "to refresh group membership, or run: newgrp "
+                    + dev_group
+                )
+        except Exception:
+            lines += [
+                "  On Ubuntu/Debian: sudo usermod -aG dialout $USER",
+                "  On Arch/Fedora:  sudo usermod -aG uucp $USER",
+                "  Then log out and back in.",
+            ]
+    elif sys.platform == "darwin":
+        lines.append(
+            "  Close any program that may be holding the port "
+            "(Arduino IDE, PlatformIO, screen, minicom) and try again."
+        )
+    return "\n".join(lines)
+
+
 try:
     import questionary
     from questionary import Choice
@@ -936,24 +990,39 @@ def _coerce_value(text: str, original: Any) -> Any:
 
 
 def _step_pick_serial_port(state: WizardState, dry_run: bool) -> None:
-    detected: list[str] = []
-    if _serial_list_ports is not None:
-        detected = [p.device for p in _serial_list_ports.comports()]
+    while True:
+        detected: list[str] = []
+        if _serial_list_ports is not None:
+            detected = [p.device for p in _serial_list_ports.comports()]
 
-    if dry_run and not detected:
-        state.serial_port = state.serial_port or "/dev/ttyUSB0"
-        return
+        if dry_run and not detected:
+            state.serial_port = state.serial_port or "/dev/ttyUSB0"
+            return
 
-    if detected:
-        choices = [Choice(title=p, value=p) for p in detected] + [Choice(title="Enter manually…", value="__manual__")]
-        default = state.serial_port if state.serial_port in detected else detected[0]
-        pick = _ask_select("Serial port", choices=choices, default=default)
-        if pick == "__manual__":
-            state.serial_port = _ask_text("Serial port path", default=state.serial_port or "/dev/ttyUSB0")
+        if detected:
+            choices = [Choice(title=p, value=p) for p in detected] + [Choice(title="Enter manually…", value="__manual__")]
+            default = state.serial_port if state.serial_port in detected else detected[0]
+            pick = _ask_select("Serial port", choices=choices, default=default)
+            if pick == "__manual__":
+                state.serial_port = _ask_text("Serial port path", default=state.serial_port or "/dev/ttyUSB0")
+            else:
+                state.serial_port = pick
         else:
-            state.serial_port = pick
-    else:
-        state.serial_port = _ask_text("Serial port path", default=state.serial_port or "/dev/ttyUSB0")
+            state.serial_port = _ask_text("Serial port path", default=state.serial_port or "/dev/ttyUSB0")
+
+        if dry_run:
+            return
+
+        hint = _check_serial_port_access(state.serial_port)
+        if hint is None:
+            return
+        print(hint, file=sys.stderr)
+        if _ask_confirm(
+            "Continue anyway? (yes = fix it in another terminal before the "
+            "build finishes; no = pick a different port)",
+            default=False,
+        ):
+            return
 
 
 def _step_confirm(state: WizardState) -> bool:
@@ -1208,6 +1277,15 @@ def _execute(state: WizardState, env: IdfEnv, dry_run: bool) -> None:
     _run_idf(env, ["build"], dry_run=dry_run)
 
     if state.serial_port:
+        if not dry_run:
+            hint = _check_serial_port_access(state.serial_port)
+            if hint is not None:
+                print(hint, file=sys.stderr)
+                _abort(
+                    "Cannot flash: serial port is not accessible. Fix the "
+                    "permission above, then re-run with --resume to skip the "
+                    "questions and jump straight to flashing."
+                )
         try:
             _run_idf(env, ["-p", state.serial_port, "flash", "monitor"], dry_run=dry_run)
         except SystemExit:

@@ -1,0 +1,6 @@
+# Dependencies for scripts/setup_and_flash.py.
+# Install once per ESP-IDF Python environment:
+#   pip install -r scripts/requirements.txt
+questionary>=2.0
+pyserial>=3.5
+PyYAML>=6.0
